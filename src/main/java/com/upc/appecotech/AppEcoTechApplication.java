@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class AppEcoTechApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AppEcoTechApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(AppEcoTechApplication.class, args);
+    }
 
 }
