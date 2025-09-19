@@ -1,0 +1,9 @@
+package com.upc.appecotech.interfaces;
+
+import com.upc.appecotech.entidades.Historialdepunto;
+
+import java.util.List;
+
+public interface IHistorialdepuntoService {
+    public List<Historialdepunto> listarHistorialdepuntos();
+}
