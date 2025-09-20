@@ -47,7 +47,7 @@ public class UsuarioEventoService implements IUsuarioEventoService {
         Evento evento = eventoRepositorio.findById(idEvento)
                 .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado"));
 
-        if (usuarioEventoRepositorio.existsByUsuarioIdUsuarioAndEventoIdEvento(idUsuario , idEvento)){
+        if (usuarioEventoRepositorio.existsByIdusuario_IdAndIdevento_Id(idUsuario , idEvento)){
             throw new IllegalArgumentException("El usuario ya esta incrito en este evento");
         }
 
@@ -98,10 +98,10 @@ public class UsuarioEventoService implements IUsuarioEventoService {
 
     @Override
     public List<UsuarioEventoDTO> listarInscritosPorEvento(Long idEvento) {
-        Evento evento = eventoRepositorio.findById(idEvento)
+        eventoRepositorio.findById(idEvento)
                 .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado"));
 
-        List<Usuarioevento> lista = usuarioEventoRepositorio.findByIdEvento(evento);
+        List<Usuarioevento> lista = usuarioEventoRepositorio.findByIdevento_Id(idEvento);
 
         return lista.stream()
                 .map(usuarioevento -> modelMapper.map(usuarioevento, UsuarioEventoDTO.class))

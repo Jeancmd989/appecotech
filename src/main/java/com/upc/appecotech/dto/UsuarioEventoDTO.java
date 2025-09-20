@@ -1,5 +1,9 @@
 package com.upc.appecotech.dto;
 
+import com.upc.appecotech.entidades.Evento;
+import com.upc.appecotech.entidades.Usuario;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,11 +18,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 
 public class UsuarioEventoDTO {
-    private Long idUsuarioEvento;
-    private Long idEvento;
-    private Long idUsuario;
-    private LocalDate fechaIncripcion;
-    private boolean asistio;
-    private Integer puntosOtorgados;
+
+    private Long id;
+    private Usuario idusuario;
+    private Evento idevento;
+    private LocalDate fechainscripcion;
+    private Boolean asistio = false;
+    private Integer puntosotorgados;
 
 }
