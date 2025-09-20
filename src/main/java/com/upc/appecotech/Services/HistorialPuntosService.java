@@ -1,5 +1,6 @@
 package com.upc.appecotech.Services;
 
+import com.upc.appecotech.dto.HistorialPuntosDTO;
 import com.upc.appecotech.entidades.Historialdepunto;
 import com.upc.appecotech.interfaces.IContactoService;
 import com.upc.appecotech.interfaces.IHistorialdepuntoService;
@@ -18,5 +19,10 @@ public class HistorialPuntosService implements IHistorialdepuntoService {
     @Override
     public List<Historialdepunto> listarHistorialdepuntos() {
         return  historialPuntosRepository.findAll();
+    }
+
+    @Override
+    public List<HistorialPuntosDTO> listarHistorialdepuntosPorUsuario(Long idUsuario) {
+        return List.of();
     }
 }
