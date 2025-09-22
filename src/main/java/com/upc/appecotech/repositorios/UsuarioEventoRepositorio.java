@@ -1,7 +1,6 @@
 package com.upc.appecotech.repositorios;
 
-import com.upc.appecotech.entidades.Evento;
-import com.upc.appecotech.entidades.Usuario;
+
 import com.upc.appecotech.entidades.Usuarioevento;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,8 +10,6 @@ public interface UsuarioEventoRepositorio extends JpaRepository<Usuarioevento, L
 
     boolean existsByIdusuario_IdAndIdevento_Id(Long idUsuario, Long idEvento);
 
-
     List<Usuarioevento> findByIdevento_Id(Long idEvento);
-
 
 }

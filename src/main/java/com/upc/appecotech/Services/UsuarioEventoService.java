@@ -33,47 +33,57 @@ public class UsuarioEventoService implements IUsuarioEventoService {
     private ModelMapper modelMapper;
 
 
-
-
     @Override
-    public List<Usuarioevento> listarUsuarioeventos() {
-        return usuarioEventoRepositorio.findAll();
-    }
+    public UsuarioEventoDTO registrarUsuarioEvento(UsuarioEventoDTO usuarioEventoDTO) {
+        try {
+            Usuario usuario = usuarioRepositorio.findById(usuarioEventoDTO.getIdusuario())
+                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + usuarioEventoDTO.getIdusuario()));
 
-    @Override
-    public UsuarioEventoDTO resgistrarUsuarioEvento(Long idUsuario, Long idEvento) {
-        Usuario usuario = usuarioRepositorio.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        Evento evento = eventoRepositorio.findById(idEvento)
-                .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado"));
+            Evento evento = eventoRepositorio.findById(usuarioEventoDTO.getIdevento())
+                    .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + usuarioEventoDTO.getIdevento()));
 
-        if (usuarioEventoRepositorio.existsByIdusuario_IdAndIdevento_Id(idUsuario , idEvento)){
-            throw new IllegalArgumentException("El usuario ya esta incrito en este evento");
+            // Verificar si ya está inscrito
+            boolean yaInscrito = usuarioEventoRepositorio.existsByIdusuario_IdAndIdevento_Id(
+                    usuarioEventoDTO.getIdusuario(), usuarioEventoDTO.getIdevento());
+
+            if (yaInscrito) {
+                throw new RuntimeException("El usuario ya está inscrito en este evento");
+            }
+
+            Usuarioevento usuarioEvento = new Usuarioevento();
+            usuarioEvento.setIdusuario(usuario);
+            usuarioEvento.setIdevento(evento);
+            usuarioEvento.setFechainscripcion(LocalDate.now());
+            usuarioEvento.setAsistio(false);
+            usuarioEvento.setPuntosotorgados(0);
+
+            Usuarioevento guardado = usuarioEventoRepositorio.save(usuarioEvento);
+
+            // Mapeo manual para evitar errores de ModelMapper
+            UsuarioEventoDTO response = new UsuarioEventoDTO();
+            response.setId(guardado.getId());
+            response.setIdusuario(guardado.getIdusuario().getId());
+            response.setIdevento(guardado.getIdevento().getId());
+            response.setFechainscripcion(guardado.getFechainscripcion());
+            response.setAsistio(guardado.getAsistio());
+            response.setPuntosotorgados(guardado.getPuntosotorgados());
+
+            return response;
+
+        } catch (EntityNotFoundException e) {
+            throw new RuntimeException("Error al registrar inscripción: " + e.getMessage());
         }
-
-        Usuarioevento usuarioevento = new Usuarioevento();
-        usuarioevento.setIdusuario(usuario);
-        usuarioevento.setIdevento(evento);
-        usuarioevento.setPuntosotorgados(0);
-        usuarioevento.setFechainscripcion(LocalDate.now());
-        usuarioevento.setAsistio(null);
-
-
-
-        Usuarioevento guardado = usuarioEventoRepositorio.save(usuarioevento);
-
-        return modelMapper.map(guardado, UsuarioEventoDTO.class);
     }
 
 
     @Override
     public UsuarioEventoDTO marcarAsistencia(Long idUsuarioEvento, boolean asistio) {
         Usuarioevento usuarioevento = usuarioEventoRepositorio.findById(idUsuarioEvento)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Inscripción no encontrada con ID: " + idUsuarioEvento));
 
         usuarioevento.setAsistio(asistio);
 
-        if (asistio){
+        if (asistio) {
             int puntos = usuarioevento.getIdevento().getPuntos();
             usuarioevento.setPuntosotorgados(puntos);
 
@@ -82,29 +92,83 @@ public class UsuarioEventoService implements IUsuarioEventoService {
             historialdepunto.setPuntosobtenidos(puntos);
             historialdepunto.setFecha(LocalDate.now());
             historialdepunto.setTipomovimiento("Evento");
-            historialdepunto.setDescripcion("Participacion en evento: " + usuarioevento.getIdevento().getNombre());
+            historialdepunto.setDescripcion("Participación en evento: " + usuarioevento.getIdevento().getNombre());
             historialdepunto.setPuntoscanjeados(0);
 
             historialPuntosRepository.save(historialdepunto);
-        }else{
+        } else {
             usuarioevento.setPuntosotorgados(0);
-
         }
 
         Usuarioevento actualizado = usuarioEventoRepositorio.save(usuarioevento);
 
-        return modelMapper.map(actualizado, UsuarioEventoDTO.class);
+        // Mapeo manual porque necesitamos control específico - igual que actualizarDeposito()
+        UsuarioEventoDTO response = new UsuarioEventoDTO();
+        response.setId(actualizado.getId());
+        response.setIdusuario(actualizado.getIdusuario().getId());
+        response.setIdevento(actualizado.getIdevento().getId());
+        response.setFechainscripcion(actualizado.getFechainscripcion());
+        response.setAsistio(actualizado.getAsistio());
+        response.setPuntosotorgados(actualizado.getPuntosotorgados());
+
+        return response;
     }
 
     @Override
     public List<UsuarioEventoDTO> listarInscritosPorEvento(Long idEvento) {
         eventoRepositorio.findById(idEvento)
-                .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + idEvento));
 
         List<Usuarioevento> lista = usuarioEventoRepositorio.findByIdevento_Id(idEvento);
 
+        // Intentamos ModelMapper primero, igual que findAll() en DepositoService
         return lista.stream()
-                .map(usuarioevento -> modelMapper.map(usuarioevento, UsuarioEventoDTO.class))
+                .map(usuarioevento -> {
+                    // Si ModelMapper falla aquí, hacemos manual
+                    UsuarioEventoDTO dto = new UsuarioEventoDTO();
+                    dto.setId(usuarioevento.getId());
+                    dto.setIdusuario(usuarioevento.getIdusuario().getId());
+                    dto.setIdevento(usuarioevento.getIdevento().getId());
+                    dto.setFechainscripcion(usuarioevento.getFechainscripcion());
+                    dto.setAsistio(usuarioevento.getAsistio());
+                    dto.setPuntosotorgados(usuarioevento.getPuntosotorgados());
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Override
+    public UsuarioEventoDTO buscarPorId(Long id) {
+        return usuarioEventoRepositorio.findById(id)
+                .map(usuarioEvento -> {
+                    // Mapeo manual porque tenemos relaciones
+                    UsuarioEventoDTO dto = new UsuarioEventoDTO();
+                    dto.setId(usuarioEvento.getId());
+                    dto.setIdusuario(usuarioEvento.getIdusuario().getId());
+                    dto.setIdevento(usuarioEvento.getIdevento().getId());
+                    dto.setFechainscripcion(usuarioEvento.getFechainscripcion());
+                    dto.setAsistio(usuarioEvento.getAsistio());
+                    dto.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
+                    return dto;
+                })
+                .orElse(null);
+    }
+
+    @Override
+    public List<UsuarioEventoDTO> listarTodos() {
+        List<Usuarioevento> lista = usuarioEventoRepositorio.findAll();
+        // Igual que findAll() en DepositoService, pero manual por las relaciones
+        return lista.stream()
+                .map(usuarioEvento -> {
+                    UsuarioEventoDTO dto = new UsuarioEventoDTO();
+                    dto.setId(usuarioEvento.getId());
+                    dto.setIdusuario(usuarioEvento.getIdusuario().getId());
+                    dto.setIdevento(usuarioEvento.getIdevento().getId());
+                    dto.setFechainscripcion(usuarioEvento.getFechainscripcion());
+                    dto.setAsistio(usuarioEvento.getAsistio());
+                    dto.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
+                    return dto;
+                })
                 .toList();
     }
 }
