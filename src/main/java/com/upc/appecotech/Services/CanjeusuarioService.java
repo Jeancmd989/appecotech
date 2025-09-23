@@ -12,6 +12,7 @@ import com.upc.appecotech.repositorios.ProductoRepositorio;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,13 @@ public class CanjeusuarioService implements ICanjeusuarioService {
     @Autowired
     private HistorialPuntosRepository  historialPuntosRepository;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
+
+    // Lo hicimos de forma manual porque con ModelMapper tuvimos problemas
+    // en esta tabla con relaciones más complejas, a diferencia de otras
+    // entidades
 
 
     @Override
@@ -44,12 +52,10 @@ public class CanjeusuarioService implements ICanjeusuarioService {
             Producto producto = productoRepositorio.findById(canjeUsuarioDTO.getIdProducto())
                     .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + canjeUsuarioDTO.getIdProducto()));
 
-            // Validar puntos suficientes
             if (!validarPuntosUsuario(usuario.getId(), producto.getId(), canjeUsuarioDTO.getCantidad())) {
                 throw new RuntimeException("Puntos insuficientes para realizar el canje");
             }
 
-            // Crear registro de canje
             Canjeusuario canjeUsuario = new Canjeusuario();
             canjeUsuario.setIdusuario(usuario);
             canjeUsuario.setIdproducto(producto);
@@ -58,10 +64,9 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
             Canjeusuario guardado = canjeUsuarioRepositorio.save(canjeUsuario);
 
-            // Calcular puntos a descontar
+
             int puntosADescontar = producto.getPuntosrequerido() * canjeUsuarioDTO.getCantidad();
 
-            // Registrar en historial de puntos (descuento)
             Historialdepunto historial = new Historialdepunto();
             historial.setIdusuario(usuario);
             historial.setPuntosobtenidos(0);
@@ -72,7 +77,6 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
             historialPuntosRepository.save(historial);
 
-            // Mapeo manual para la respuesta
             CanjeUsuarioDTO response = new CanjeUsuarioDTO();
             response.setIdCanjeUsuario(guardado.getId());
             response.setIdUsuario(guardado.getIdusuario().getId());
@@ -96,13 +100,11 @@ public class CanjeusuarioService implements ICanjeusuarioService {
         Producto producto = productoRepositorio.findById(idProducto)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
 
-        // Calcular puntos totales del usuario
         List<Historialdepunto> historial = historialPuntosRepository.findByUsuarioId(idUsuario);
         int puntosObtenidos = historial.stream().mapToInt(Historialdepunto::getPuntosobtenidos).sum();
         int puntosCanjeados = historial.stream().mapToInt(Historialdepunto::getPuntoscanjeados).sum();
         int puntosDisponibles = puntosObtenidos - puntosCanjeados;
 
-        // Calcular puntos requeridos para el canje
         int puntosRequeridos = producto.getPuntosrequerido() * cantidad;
 
         return puntosDisponibles >= puntosRequeridos;
@@ -113,13 +115,13 @@ public class CanjeusuarioService implements ICanjeusuarioService {
     public CanjeUsuarioDTO buscarPorId(Long id) {
         return canjeUsuarioRepositorio.findById(id)
                 .map(canjeUsuario -> {
-                    CanjeUsuarioDTO dto = new CanjeUsuarioDTO();
-                    dto.setIdCanjeUsuario(canjeUsuario.getId());
-                    dto.setIdUsuario(canjeUsuario.getIdusuario().getId());
-                    dto.setIdProducto(canjeUsuario.getIdproducto().getId());
-                    dto.setFechaCanje(canjeUsuario.getFechacanje());
-                    dto.setCantidad(canjeUsuario.getCantidad());
-                    return dto;
+                    CanjeUsuarioDTO canjeUsuarioDTO = new CanjeUsuarioDTO();
+                    canjeUsuarioDTO.setIdCanjeUsuario(canjeUsuario.getId());
+                    canjeUsuarioDTO.setIdUsuario(canjeUsuario.getIdusuario().getId());
+                    canjeUsuarioDTO.setIdProducto(canjeUsuario.getIdproducto().getId());
+                    canjeUsuarioDTO.setFechaCanje(canjeUsuario.getFechacanje());
+                    canjeUsuarioDTO.setCantidad(canjeUsuario.getCantidad());
+                    return canjeUsuarioDTO;
                 })
                 .orElse(null);
     }
@@ -129,13 +131,13 @@ public class CanjeusuarioService implements ICanjeusuarioService {
         List<Canjeusuario> lista = canjeUsuarioRepositorio.findAll();
         return lista.stream()
                 .map(canjeUsuario -> {
-                    CanjeUsuarioDTO dto = new CanjeUsuarioDTO();
-                    dto.setIdCanjeUsuario(canjeUsuario.getId());
-                    dto.setIdUsuario(canjeUsuario.getIdusuario().getId());
-                    dto.setIdProducto(canjeUsuario.getIdproducto().getId());
-                    dto.setFechaCanje(canjeUsuario.getFechacanje());
-                    dto.setCantidad(canjeUsuario.getCantidad());
-                    return dto;
+                    CanjeUsuarioDTO canjeUsuarioDTO = new CanjeUsuarioDTO();
+                    canjeUsuarioDTO.setIdCanjeUsuario(canjeUsuario.getId());
+                    canjeUsuarioDTO.setIdUsuario(canjeUsuario.getIdusuario().getId());
+                    canjeUsuarioDTO.setIdProducto(canjeUsuario.getIdproducto().getId());
+                    canjeUsuarioDTO.setFechaCanje(canjeUsuario.getFechacanje());
+                    canjeUsuarioDTO.setCantidad(canjeUsuario.getCantidad());
+                    return canjeUsuarioDTO;
                 })
                 .toList();
     }
@@ -149,13 +151,13 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
         return lista.stream()
                 .map(canjeUsuario -> {
-                    CanjeUsuarioDTO dto = new CanjeUsuarioDTO();
-                    dto.setIdCanjeUsuario(canjeUsuario.getId());
-                    dto.setIdUsuario(canjeUsuario.getIdusuario().getId());
-                    dto.setIdProducto(canjeUsuario.getIdproducto().getId());
-                    dto.setFechaCanje(canjeUsuario.getFechacanje());
-                    dto.setCantidad(canjeUsuario.getCantidad());
-                    return dto;
+                    CanjeUsuarioDTO canjeUsuarioDTO = new CanjeUsuarioDTO();
+                    canjeUsuarioDTO.setIdCanjeUsuario(canjeUsuario.getId());
+                    canjeUsuarioDTO.setIdUsuario(canjeUsuario.getIdusuario().getId());
+                    canjeUsuarioDTO.setIdProducto(canjeUsuario.getIdproducto().getId());
+                    canjeUsuarioDTO.setFechaCanje(canjeUsuario.getFechacanje());
+                    canjeUsuarioDTO.setCantidad(canjeUsuario.getCantidad());
+                    return canjeUsuarioDTO;
                 })
                 .toList();
     }

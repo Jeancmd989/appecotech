@@ -123,7 +123,6 @@ public class DepositoService implements IDepositoService{
 
 
 
-
     @Override
     @Transactional
     public DepositoDTO validarDeposito(Long id, boolean aprobado) {

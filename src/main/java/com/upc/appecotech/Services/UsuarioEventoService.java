@@ -11,6 +11,7 @@ import com.upc.appecotech.repositorios.HistorialPuntosRepository;
 import com.upc.appecotech.repositorios.UsuarioEventoRepositorio;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,8 +33,13 @@ public class UsuarioEventoService implements IUsuarioEventoService {
     @Autowired
     private ModelMapper modelMapper;
 
+    // Lo hicimos de forma manual porque con ModelMapper tuvimos problemas
+    // en esta tabla con relaciones más complejas, a diferencia de otras
+    // entidades
+
 
     @Override
+    @Transactional
     public UsuarioEventoDTO registrarUsuarioEvento(UsuarioEventoDTO usuarioEventoDTO) {
         try {
             Usuario usuario = usuarioRepositorio.findById(usuarioEventoDTO.getIdusuario())
@@ -42,7 +48,6 @@ public class UsuarioEventoService implements IUsuarioEventoService {
             Evento evento = eventoRepositorio.findById(usuarioEventoDTO.getIdevento())
                     .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + usuarioEventoDTO.getIdevento()));
 
-            // Verificar si ya está inscrito
             boolean yaInscrito = usuarioEventoRepositorio.existsByIdusuario_IdAndIdevento_Id(
                     usuarioEventoDTO.getIdusuario(), usuarioEventoDTO.getIdevento());
 
@@ -77,6 +82,7 @@ public class UsuarioEventoService implements IUsuarioEventoService {
 
 
     @Override
+    @Transactional
     public UsuarioEventoDTO marcarAsistencia(Long idUsuarioEvento, boolean asistio) {
         Usuarioevento usuarioevento = usuarioEventoRepositorio.findById(idUsuarioEvento)
                 .orElseThrow(() -> new EntityNotFoundException("Inscripción no encontrada con ID: " + idUsuarioEvento));
@@ -102,7 +108,6 @@ public class UsuarioEventoService implements IUsuarioEventoService {
 
         Usuarioevento actualizado = usuarioEventoRepositorio.save(usuarioevento);
 
-        // Mapeo manual porque necesitamos control específico - igual que actualizarDeposito()
         UsuarioEventoDTO response = new UsuarioEventoDTO();
         response.setId(actualizado.getId());
         response.setIdusuario(actualizado.getIdusuario().getId());
@@ -121,18 +126,17 @@ public class UsuarioEventoService implements IUsuarioEventoService {
 
         List<Usuarioevento> lista = usuarioEventoRepositorio.findByIdevento_Id(idEvento);
 
-        // Intentamos ModelMapper primero, igual que findAll() en DepositoService
         return lista.stream()
                 .map(usuarioevento -> {
                     // Si ModelMapper falla aquí, hacemos manual
-                    UsuarioEventoDTO dto = new UsuarioEventoDTO();
-                    dto.setId(usuarioevento.getId());
-                    dto.setIdusuario(usuarioevento.getIdusuario().getId());
-                    dto.setIdevento(usuarioevento.getIdevento().getId());
-                    dto.setFechainscripcion(usuarioevento.getFechainscripcion());
-                    dto.setAsistio(usuarioevento.getAsistio());
-                    dto.setPuntosotorgados(usuarioevento.getPuntosotorgados());
-                    return dto;
+                    UsuarioEventoDTO usuarioEventoDTO = new UsuarioEventoDTO();
+                    usuarioEventoDTO.setId(usuarioevento.getId());
+                    usuarioEventoDTO.setIdusuario(usuarioevento.getIdusuario().getId());
+                    usuarioEventoDTO.setIdevento(usuarioevento.getIdevento().getId());
+                    usuarioEventoDTO.setFechainscripcion(usuarioevento.getFechainscripcion());
+                    usuarioEventoDTO.setAsistio(usuarioevento.getAsistio());
+                    usuarioEventoDTO.setPuntosotorgados(usuarioevento.getPuntosotorgados());
+                    return usuarioEventoDTO;
                 })
                 .toList();
     }
@@ -141,15 +145,14 @@ public class UsuarioEventoService implements IUsuarioEventoService {
     public UsuarioEventoDTO buscarPorId(Long id) {
         return usuarioEventoRepositorio.findById(id)
                 .map(usuarioEvento -> {
-                    // Mapeo manual porque tenemos relaciones
-                    UsuarioEventoDTO dto = new UsuarioEventoDTO();
-                    dto.setId(usuarioEvento.getId());
-                    dto.setIdusuario(usuarioEvento.getIdusuario().getId());
-                    dto.setIdevento(usuarioEvento.getIdevento().getId());
-                    dto.setFechainscripcion(usuarioEvento.getFechainscripcion());
-                    dto.setAsistio(usuarioEvento.getAsistio());
-                    dto.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
-                    return dto;
+                    UsuarioEventoDTO usuarioEventoDTO = new UsuarioEventoDTO();
+                    usuarioEventoDTO.setId(usuarioEvento.getId());
+                    usuarioEventoDTO.setIdusuario(usuarioEvento.getIdusuario().getId());
+                    usuarioEventoDTO.setIdevento(usuarioEvento.getIdevento().getId());
+                    usuarioEventoDTO.setFechainscripcion(usuarioEvento.getFechainscripcion());
+                    usuarioEventoDTO.setAsistio(usuarioEvento.getAsistio());
+                    usuarioEventoDTO.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
+                    return usuarioEventoDTO;
                 })
                 .orElse(null);
     }
@@ -157,17 +160,16 @@ public class UsuarioEventoService implements IUsuarioEventoService {
     @Override
     public List<UsuarioEventoDTO> listarTodos() {
         List<Usuarioevento> lista = usuarioEventoRepositorio.findAll();
-        // Igual que findAll() en DepositoService, pero manual por las relaciones
         return lista.stream()
                 .map(usuarioEvento -> {
-                    UsuarioEventoDTO dto = new UsuarioEventoDTO();
-                    dto.setId(usuarioEvento.getId());
-                    dto.setIdusuario(usuarioEvento.getIdusuario().getId());
-                    dto.setIdevento(usuarioEvento.getIdevento().getId());
-                    dto.setFechainscripcion(usuarioEvento.getFechainscripcion());
-                    dto.setAsistio(usuarioEvento.getAsistio());
-                    dto.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
-                    return dto;
+                    UsuarioEventoDTO usuarioEventoDTO = new UsuarioEventoDTO();
+                    usuarioEventoDTO.setId(usuarioEvento.getId());
+                    usuarioEventoDTO.setIdusuario(usuarioEvento.getIdusuario().getId());
+                    usuarioEventoDTO.setIdevento(usuarioEvento.getIdevento().getId());
+                    usuarioEventoDTO.setFechainscripcion(usuarioEvento.getFechainscripcion());
+                    usuarioEventoDTO.setAsistio(usuarioEvento.getAsistio());
+                    usuarioEventoDTO.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
+                    return usuarioEventoDTO;
                 })
                 .toList();
     }
