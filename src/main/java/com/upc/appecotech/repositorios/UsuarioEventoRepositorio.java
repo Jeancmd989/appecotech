@@ -3,6 +3,8 @@ package com.upc.appecotech.repositorios;
 
 import com.upc.appecotech.entidades.Usuarioevento;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -11,5 +13,8 @@ public interface UsuarioEventoRepositorio extends JpaRepository<Usuarioevento, L
     boolean existsByIdusuario_IdAndIdevento_Id(Long idUsuario, Long idEvento);
 
     List<Usuarioevento> findByIdevento_Id(Long idEvento);
+
+    @Query("SELECT ue FROM Usuarioevento ue WHERE ue.idusuario.id = :idUsuario AND ue.idevento.id = :idEvento")
+    List<Usuarioevento> findByUsuarioIdAndEventoId(@Param("idUsuario") Long idUsuario, @Param("idEvento") Long idEvento);
 
 }

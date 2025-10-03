@@ -1,8 +1,6 @@
 package com.upc.appecotech.Services;
 
-import com.upc.appecotech.dto.DepositoDTO;
 import com.upc.appecotech.dto.UsuarioDTO;
-import com.upc.appecotech.entidades.Deposito;
 import com.upc.appecotech.entidades.Usuario;
 import com.upc.appecotech.interfaces.IUsuarioService;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;

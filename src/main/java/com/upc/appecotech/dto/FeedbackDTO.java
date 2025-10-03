@@ -6,18 +6,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class HistorialPuntosDTO {
-    private Long id;
+public class FeedbackDTO {
+    private Long idFeedback;
+    private Long idEvento;
     private Long idUsuario;
-    private Integer puntosObtenidos;
-    private String tipoMovimiento;
-    private String descripcion;
-    private Integer puntosCanjeados;
+    private String comentario;
     private LocalDate fecha;
+    private Integer puntuacion;
 }

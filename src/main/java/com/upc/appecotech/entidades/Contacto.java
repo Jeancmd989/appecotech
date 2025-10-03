@@ -18,7 +18,7 @@ public class Contacto {
     private Long id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "idusuario", nullable = false)
     private Usuario idusuario;
 

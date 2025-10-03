@@ -77,14 +77,16 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
             historialPuntosRepository.save(historial);
 
-            CanjeUsuarioDTO response = new CanjeUsuarioDTO();
-            response.setIdCanjeUsuario(guardado.getId());
-            response.setIdUsuario(guardado.getIdusuario().getId());
-            response.setIdProducto(guardado.getIdproducto().getId());
-            response.setFechaCanje(guardado.getFechacanje());
-            response.setCantidad(guardado.getCantidad());
+            // 6. Mapear entidad guardada -> DTO de respuesta
+            CanjeUsuarioDTO respuesta = modelMapper.map(guardado, CanjeUsuarioDTO.class);
 
-            return response;
+            // 7. Setear manualmente los IDs de relaciones
+            respuesta.setIdCanjeUsuario(guardado.getId());
+            respuesta.setIdUsuario(guardado.getIdusuario().getId());
+            respuesta.setIdProducto(guardado.getIdproducto().getId());
+
+            return respuesta;
+
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al realizar canje: " + e.getMessage());

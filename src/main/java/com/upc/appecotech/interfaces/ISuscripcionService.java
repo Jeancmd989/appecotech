@@ -1,9 +1,17 @@
 package com.upc.appecotech.interfaces;
 
+import com.upc.appecotech.dto.SuscripcionDTO;
 import com.upc.appecotech.entidades.Suscripcion;
 
 import java.util.List;
 
 public interface ISuscripcionService {
-    public List<Suscripcion> listarSuscripciones();
+    SuscripcionDTO crearSuscripcion(SuscripcionDTO suscripcionDTO);
+    boolean validarSuscripcionActiva(Long idUsuario);
+    SuscripcionDTO actualizarEstadoSuscripcion(Long idSuscripcion, String nuevoEstado);
+    SuscripcionDTO renovarSuscripcion(Long idSuscripcion, String nuevoPlan);
+    SuscripcionDTO buscarPorId(Long id);
+    List<SuscripcionDTO> listarTodas();
+    List<SuscripcionDTO> listarSuscripcionesPorUsuario(Long idUsuario);
+    SuscripcionDTO obtenerSuscripcionActivaUsuario(Long idUsuario);
 }
