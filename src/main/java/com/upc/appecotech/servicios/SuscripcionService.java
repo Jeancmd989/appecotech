@@ -9,6 +9,7 @@ import com.upc.appecotech.repositorios.MetodoPagoRepositorio;
 import com.upc.appecotech.repositorios.SuscripcionRepositorio;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class SuscripcionService implements ISuscripcionService {
 
 
     @Override
+    @Transactional
     public SuscripcionDTO crearSuscripcion(SuscripcionDTO suscripcionDTO) {
         try {
             Usuario usuario = usuarioRepositorio.findById(suscripcionDTO.getIdusuario())
@@ -42,7 +44,6 @@ public class SuscripcionService implements ISuscripcionService {
                 throw new RuntimeException("El usuario ya tiene una suscripción activa");
             }
 
-            // Crear nueva suscripción
             Suscripcion suscripcion = new Suscripcion();
             suscripcion.setIdusuario(usuario);
             suscripcion.setIdmetodopago(metodoPago);
@@ -54,26 +55,17 @@ public class SuscripcionService implements ISuscripcionService {
 
             Suscripcion guardada = suscripcionRepositorio.save(suscripcion);
 
-            // Mapeo manual para la respuesta
-            SuscripcionDTO response = new SuscripcionDTO();
-            response.setId(guardada.getId());
-            response.setIdusuario(guardada.getIdusuario().getId());
-            response.setIdmetodopago(guardada.getIdmetodopago().getId());
-            response.setTipoplan(guardada.getTipoplan());
-            response.setFechainicio(guardada.getFechainicio());
-            response.setFechafin(guardada.getFechafin());
-            response.setDescripcion(guardada.getDescripcion());
-            response.setEstado(guardada.getEstado());
-
-            return response;
+            return modelMapper.map(guardada, SuscripcionDTO.class);
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al crear suscripción: " + e.getMessage());
         }
+
     }
 
 
     @Override
+    @Transactional
     public boolean validarSuscripcionActiva(Long idUsuario) {
         List<Suscripcion> suscripciones = suscripcionRepositorio.findByUsuarioId(idUsuario);
 
@@ -83,77 +75,70 @@ public class SuscripcionService implements ISuscripcionService {
     }
 
     @Override
+    @Transactional
     public SuscripcionDTO actualizarEstadoSuscripcion(Long idSuscripcion, String nuevoEstado) {
-        Suscripcion suscripcion = suscripcionRepositorio.findById(idSuscripcion)
+        return suscripcionRepositorio.findById(idSuscripcion)
+                .map(suscripcion -> {
+                    suscripcion.setEstado(nuevoEstado);
+                    Suscripcion actualizada = suscripcionRepositorio.save(suscripcion);
+                    return modelMapper.map(actualizada, SuscripcionDTO.class);
+                })
                 .orElseThrow(() -> new EntityNotFoundException("Suscripción no encontrada con ID: " + idSuscripcion));
-
-        suscripcion.setEstado(nuevoEstado);
-
-        // Si se cancela, mantener fecha fin original
-        // Si se suspende, podrías ajustar la lógica según necesidades
-
-        Suscripcion actualizada = suscripcionRepositorio.save(suscripcion);
-
-        // Mapeo manual para la respuesta
-        SuscripcionDTO response = new SuscripcionDTO();
-        response.setId(actualizada.getId());
-        response.setIdusuario(actualizada.getIdusuario().getId());
-        response.setIdmetodopago(actualizada.getIdmetodopago().getId());
-        response.setTipoplan(actualizada.getTipoplan());
-        response.setFechainicio(actualizada.getFechainicio());
-        response.setFechafin(actualizada.getFechafin());
-        response.setDescripcion(actualizada.getDescripcion());
-        response.setEstado(actualizada.getEstado());
-
-        return response;
     }
 
     @Override
+    @Transactional
     public SuscripcionDTO renovarSuscripcion(Long idSuscripcion, String nuevoPlan) {
-        Suscripcion suscripcionActual = suscripcionRepositorio.findById(idSuscripcion)
+        return suscripcionRepositorio.findById(idSuscripcion)
+                .map(suscripcion -> {
+                    suscripcion.setTipoplan(nuevoPlan);
+                    suscripcion.setFechainicio(LocalDate.now());
+                    suscripcion.setFechafin(calcularFechaFin(nuevoPlan));
+                    suscripcion.setDescripcion(generarDescripcion(nuevoPlan));
+                    suscripcion.setEstado("Activa");
+
+                    Suscripcion renovada = suscripcionRepositorio.save(suscripcion);
+                    return modelMapper.map(renovada, SuscripcionDTO.class);
+                })
                 .orElseThrow(() -> new EntityNotFoundException("Suscripción no encontrada con ID: " + idSuscripcion));
-
-        // Actualizar suscripción existente
-        suscripcionActual.setTipoplan(nuevoPlan);
-        suscripcionActual.setFechainicio(LocalDate.now());
-        suscripcionActual.setFechafin(calcularFechaFin(nuevoPlan));
-        suscripcionActual.setDescripcion(generarDescripcion(nuevoPlan));
-        suscripcionActual.setEstado("Activa");
-
-        Suscripcion renovada = suscripcionRepositorio.save(suscripcionActual);
-
-        // Mapeo manual para la respuesta
-        SuscripcionDTO response = new SuscripcionDTO();
-        response.setId(renovada.getId());
-        response.setIdusuario(renovada.getIdusuario().getId());
-        response.setIdmetodopago(renovada.getIdmetodopago().getId());
-        response.setTipoplan(renovada.getTipoplan());
-        response.setFechainicio(renovada.getFechainicio());
-        response.setFechafin(renovada.getFechafin());
-        response.setDescripcion(renovada.getDescripcion());
-        response.setEstado(renovada.getEstado());
-
-        return response;
     }
 
     @Override
     public SuscripcionDTO buscarPorId(Long id) {
-        return null;
+        return suscripcionRepositorio.findById(id)
+                .map(suscripcion -> modelMapper.map(suscripcion, SuscripcionDTO.class))
+                .orElse(null);
     }
 
     @Override
     public List<SuscripcionDTO> listarTodas() {
-        return List.of();
+        List<Suscripcion> lista = suscripcionRepositorio.findAll();
+        return lista.stream()
+                .map(suscripcion -> modelMapper.map(suscripcion, SuscripcionDTO.class))
+                .toList();
     }
 
     @Override
     public List<SuscripcionDTO> listarSuscripcionesPorUsuario(Long idUsuario) {
-        return List.of();
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
+        List<Suscripcion> lista = suscripcionRepositorio.findByUsuarioId(idUsuario);
+
+        return lista.stream()
+                .map(suscripcion -> modelMapper.map(suscripcion, SuscripcionDTO.class))
+                .toList();
     }
 
     @Override
     public SuscripcionDTO obtenerSuscripcionActivaUsuario(Long idUsuario) {
-        return null;
+        List<Suscripcion> suscripciones = suscripcionRepositorio.findByUsuarioId(idUsuario);
+
+        return suscripciones.stream()
+                .filter(s -> "Activa".equals(s.getEstado()) && s.getFechafin().isAfter(LocalDate.now()))
+                .findFirst()
+                .map(suscripcion -> modelMapper.map(suscripcion, SuscripcionDTO.class))
+                .orElse(null);
     }
 
     // Métodos helper

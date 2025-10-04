@@ -44,7 +44,7 @@ public class UsuarioService implements IUsuarioService {
 
     @Override
     public UsuarioDTO registrarUsuario(UsuarioDTO usuarioDTO) {
-        if (usuarioDTO.getIdUsuario() != null) {
+        if (usuarioDTO.getId() != null) {
             throw new RuntimeException("No se debe proporcionar ID al crear un usuario");
         }
         if (usuarioRepositorio.existsByEmail(usuarioDTO.getEmail())) {

@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 
 public class FeedbackDTO {
-    private Long idFeedback;
+    private Long id;
     private Long idEvento;
     private Long idUsuario;
     private String comentario;

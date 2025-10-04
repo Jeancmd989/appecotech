@@ -14,9 +14,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 
 public class CanjeUsuarioDTO {
-    private Long idCanjeUsuario;
+    private Long id;
     private Long idUsuario;
     private Long idProducto;
-    private LocalDate fechaCanje;
+    private LocalDate fechacanje;
     private Integer cantidad;
 }

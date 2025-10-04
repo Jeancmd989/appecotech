@@ -37,11 +37,6 @@ public class CanjeusuarioService implements ICanjeusuarioService {
     private ModelMapper modelMapper;
 
 
-    // Lo hicimos de forma manual porque con ModelMapper tuvimos problemas
-    // en esta tabla con relaciones más complejas, a diferencia de otras
-    // entidades
-
-
     @Override
     @Transactional
     public CanjeUsuarioDTO canjearProducto(CanjeUsuarioDTO canjeUsuarioDTO) {
@@ -52,10 +47,12 @@ public class CanjeusuarioService implements ICanjeusuarioService {
             Producto producto = productoRepositorio.findById(canjeUsuarioDTO.getIdProducto())
                     .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + canjeUsuarioDTO.getIdProducto()));
 
+            // Validar puntos suficientes
             if (!validarPuntosUsuario(usuario.getId(), producto.getId(), canjeUsuarioDTO.getCantidad())) {
                 throw new RuntimeException("Puntos insuficientes para realizar el canje");
             }
 
+            // Crear registro de canje
             Canjeusuario canjeUsuario = new Canjeusuario();
             canjeUsuario.setIdusuario(usuario);
             canjeUsuario.setIdproducto(producto);
@@ -64,9 +61,10 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
             Canjeusuario guardado = canjeUsuarioRepositorio.save(canjeUsuario);
 
-
+            // Calcular puntos a descontar
             int puntosADescontar = producto.getPuntosrequerido() * canjeUsuarioDTO.getCantidad();
 
+            // Registrar en historial de puntos
             Historialdepunto historial = new Historialdepunto();
             historial.setIdusuario(usuario);
             historial.setPuntosobtenidos(0);
@@ -77,15 +75,7 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
             historialPuntosRepository.save(historial);
 
-            // 6. Mapear entidad guardada -> DTO de respuesta
-            CanjeUsuarioDTO respuesta = modelMapper.map(guardado, CanjeUsuarioDTO.class);
-
-            // 7. Setear manualmente los IDs de relaciones
-            respuesta.setIdCanjeUsuario(guardado.getId());
-            respuesta.setIdUsuario(guardado.getIdusuario().getId());
-            respuesta.setIdProducto(guardado.getIdproducto().getId());
-
-            return respuesta;
+            return modelMapper.map(guardado, CanjeUsuarioDTO.class);
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al realizar canje: " + e.getMessage());
@@ -115,35 +105,21 @@ public class CanjeusuarioService implements ICanjeusuarioService {
     @Transactional
     public CanjeUsuarioDTO buscarPorId(Long id) {
         return canjeUsuarioRepositorio.findById(id)
-                .map(canjeUsuario -> {
-                    CanjeUsuarioDTO canjeUsuarioDTO = new CanjeUsuarioDTO();
-                    canjeUsuarioDTO.setIdCanjeUsuario(canjeUsuario.getId());
-                    canjeUsuarioDTO.setIdUsuario(canjeUsuario.getIdusuario().getId());
-                    canjeUsuarioDTO.setIdProducto(canjeUsuario.getIdproducto().getId());
-                    canjeUsuarioDTO.setFechaCanje(canjeUsuario.getFechacanje());
-                    canjeUsuarioDTO.setCantidad(canjeUsuario.getCantidad());
-                    return canjeUsuarioDTO;
-                })
+                .map(canjeUsuario -> modelMapper.map(canjeUsuario, CanjeUsuarioDTO.class))
                 .orElse(null);
     }
 
     @Override
+    @Transactional
     public List<CanjeUsuarioDTO> listarTodos() {
         List<Canjeusuario> lista = canjeUsuarioRepositorio.findAll();
         return lista.stream()
-                .map(canjeUsuario -> {
-                    CanjeUsuarioDTO canjeUsuarioDTO = new CanjeUsuarioDTO();
-                    canjeUsuarioDTO.setIdCanjeUsuario(canjeUsuario.getId());
-                    canjeUsuarioDTO.setIdUsuario(canjeUsuario.getIdusuario().getId());
-                    canjeUsuarioDTO.setIdProducto(canjeUsuario.getIdproducto().getId());
-                    canjeUsuarioDTO.setFechaCanje(canjeUsuario.getFechacanje());
-                    canjeUsuarioDTO.setCantidad(canjeUsuario.getCantidad());
-                    return canjeUsuarioDTO;
-                })
+                .map(canjeUsuario -> modelMapper.map(canjeUsuario, CanjeUsuarioDTO.class))
                 .toList();
     }
 
     @Override
+    @Transactional
     public List<CanjeUsuarioDTO> listarCanjesPorUsuario(Long idUsuario) {
         usuarioRepositorio.findById(idUsuario)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
@@ -151,15 +127,7 @@ public class CanjeusuarioService implements ICanjeusuarioService {
         List<Canjeusuario> lista = canjeUsuarioRepositorio.findByUsuarioId(idUsuario);
 
         return lista.stream()
-                .map(canjeUsuario -> {
-                    CanjeUsuarioDTO canjeUsuarioDTO = new CanjeUsuarioDTO();
-                    canjeUsuarioDTO.setIdCanjeUsuario(canjeUsuario.getId());
-                    canjeUsuarioDTO.setIdUsuario(canjeUsuario.getIdusuario().getId());
-                    canjeUsuarioDTO.setIdProducto(canjeUsuario.getIdproducto().getId());
-                    canjeUsuarioDTO.setFechaCanje(canjeUsuario.getFechacanje());
-                    canjeUsuarioDTO.setCantidad(canjeUsuario.getCantidad());
-                    return canjeUsuarioDTO;
-                })
+                .map(canjeUsuario -> modelMapper.map(canjeUsuario, CanjeUsuarioDTO.class))
                 .toList();
     }
 }

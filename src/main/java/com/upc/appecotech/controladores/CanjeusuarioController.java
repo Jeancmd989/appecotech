@@ -2,6 +2,7 @@ package com.upc.appecotech.controladores;
 
 import com.upc.appecotech.dtos.CanjeUsuarioDTO;
 import com.upc.appecotech.interfaces.ICanjeusuarioService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,27 +25,40 @@ public class CanjeusuarioController {
         }
     }
 
-    @GetMapping("/usuarios/{idUsuario}/validar-puntos/{idProducto}")
+    @GetMapping("/usuarios/{idUsuario}/validar-puntos")
     public ResponseEntity<Boolean> validarPuntosUsuario(
             @PathVariable Long idUsuario,
-            @PathVariable Long idProducto,
+            @RequestParam Long idProducto,
             @RequestParam Integer cantidad) {
-        boolean tienePuntos = canjeusuarioService.validarPuntosUsuario(idUsuario, idProducto, cantidad);
-        return ResponseEntity.ok(tienePuntos);
+        try {
+            boolean tienePuntos = canjeusuarioService.validarPuntosUsuario(idUsuario, idProducto, cantidad);
+            return ResponseEntity.ok(tienePuntos);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/canjes")
-    public List<CanjeUsuarioDTO> listarTodos(){
-        return canjeusuarioService.listarTodos();
+    public ResponseEntity<List<CanjeUsuarioDTO>> listarTodos(){
+        return ResponseEntity.ok(canjeusuarioService.listarTodos());
     }
 
     @GetMapping("/canjes/{id}")
-    public CanjeUsuarioDTO buscarPorId(@PathVariable Long id){
-        return canjeusuarioService.buscarPorId(id);
+    public ResponseEntity<CanjeUsuarioDTO> buscarPorId(@PathVariable Long id){
+        CanjeUsuarioDTO canje = canjeusuarioService.buscarPorId(id);
+        if (canje != null) {
+            return ResponseEntity.ok(canje);
+        }
+        return ResponseEntity.notFound().build();
     }
 
+
     @GetMapping("/usuarios/{idUsuario}/canjes")
-    public List<CanjeUsuarioDTO> listarCanjesPorUsuario(@PathVariable Long idUsuario) {
-        return canjeusuarioService.listarCanjesPorUsuario(idUsuario);
+    public ResponseEntity<List<CanjeUsuarioDTO>> listarCanjesPorUsuario(@PathVariable Long idUsuario) {
+        try {
+            return ResponseEntity.ok(canjeusuarioService.listarCanjesPorUsuario(idUsuario));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

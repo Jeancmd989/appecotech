@@ -2,6 +2,7 @@ package com.upc.appecotech.controladores;
 
 import com.upc.appecotech.dtos.DepositoDTO;
 import com.upc.appecotech.interfaces.IDepositoService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,24 +26,40 @@ public class DepositoController {
     }
 
     @PutMapping("/depositos/{id}")
-    public DepositoDTO actualizarDeposito(@PathVariable Long id, @RequestBody DepositoDTO depositoDTO) {
-        return  depositoService.actualizarDeposito(id, depositoDTO);
+    public ResponseEntity<?> actualizarDeposito(@PathVariable Long id, @RequestBody DepositoDTO depositoDTO) {
+        try {
+            DepositoDTO actualizado = depositoService.actualizarDeposito(id, depositoDTO);
+            return ResponseEntity.ok(actualizado);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/depositos")
-    public List<DepositoDTO> findAll(){
-        return depositoService.findAll();
+    public ResponseEntity<List<DepositoDTO>> findAll(){
+        return ResponseEntity.ok(depositoService.findAll());
     }
 
 
     @GetMapping("/depositos/{id}")
-    public DepositoDTO buscarPorId(@PathVariable Long id){
-        return depositoService.buscarPorId(id);
+    public ResponseEntity<DepositoDTO> buscarPorId(@PathVariable Long id){
+        DepositoDTO deposito = depositoService.buscarPorId(id);
+        if (deposito != null) {
+            return ResponseEntity.ok(deposito);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/depositos/{id}/validar")
-    public DepositoDTO validarDeposito(@PathVariable Long id, @RequestParam boolean aprobado){
-        return depositoService.validarDeposito(id, aprobado);
+    public ResponseEntity<?> validarDeposito(@PathVariable Long id, @RequestParam boolean aprobado){
+        try {
+            DepositoDTO validado = depositoService.validarDeposito(id, aprobado);
+            return ResponseEntity.ok(validado);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }

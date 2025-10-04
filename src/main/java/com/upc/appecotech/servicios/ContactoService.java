@@ -7,6 +7,8 @@ import com.upc.appecotech.interfaces.IContactoService;
 import com.upc.appecotech.repositorios.ContactoRepositorio;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,14 +21,17 @@ public class ContactoService implements IContactoService {
     private ContactoRepositorio contactoRepositorio;
     @Autowired
     private UsuarioRepositorio usuarioRepositorio;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
+    @Transactional
     public ContactoDTO crearContacto(ContactoDTO contactoDTO) {
         try {
             Usuario usuario = usuarioRepositorio.findById(contactoDTO.getIdUsuario())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + contactoDTO.getIdUsuario()));
 
-            // Validaciones
+            // Validar descripción no vacía
             if (contactoDTO.getDescripcionProblema() == null || contactoDTO.getDescripcionProblema().trim().isEmpty()) {
                 throw new RuntimeException("La descripción del problema no puede estar vacía");
             }
@@ -36,20 +41,11 @@ public class ContactoService implements IContactoService {
             contacto.setDescripcionproblema(contactoDTO.getDescripcionProblema());
             contacto.setTiporeclamo(contactoDTO.getTipoReclamo());
             contacto.setFecha(LocalDate.now());
-            contacto.setEstado("Pendiente"); // Estado inicial
+            contacto.setEstado("Pendiente");
 
             Contacto guardado = contactoRepositorio.save(contacto);
 
-            // Mapeo manual
-            ContactoDTO response = new ContactoDTO();
-            response.setId(guardado.getId());
-            response.setIdUsuario(guardado.getIdusuario().getId());
-            response.setFecha(guardado.getFecha());
-            response.setDescripcionProblema(guardado.getDescripcionproblema());
-            response.setTipoReclamo(guardado.getTiporeclamo());
-            response.setEstado(guardado.getEstado());
-
-            return response;
+            return modelMapper.map(guardado, ContactoDTO.class);
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al crear contacto: " + e.getMessage());
@@ -57,41 +53,53 @@ public class ContactoService implements IContactoService {
     }
 
     @Override
+    @Transactional
     public ContactoDTO actualizarEstadoContacto(Long idContacto, String nuevoEstado) {
-        Contacto contacto = contactoRepositorio.findById(idContacto)
-                .orElseThrow(() -> new EntityNotFoundException("Contacto no encontrado"));
-
-        contacto.setEstado(nuevoEstado);
-        Contacto actualizado = contactoRepositorio.save(contacto);
-
-        ContactoDTO response = new ContactoDTO();
-        response.setId(actualizado.getId());
-        response.setIdUsuario(actualizado.getIdusuario().getId());
-        response.setFecha(actualizado.getFecha());
-        response.setDescripcionProblema(actualizado.getDescripcionproblema());
-        response.setTipoReclamo(actualizado.getTiporeclamo());
-        response.setEstado(actualizado.getEstado());
-
-        return response;
+        return contactoRepositorio.findById(idContacto)
+                .map(contacto -> {
+                    contacto.setEstado(nuevoEstado);
+                    Contacto actualizado = contactoRepositorio.save(contacto);
+                    return modelMapper.map(actualizado, ContactoDTO.class);
+                })
+                .orElseThrow(() -> new EntityNotFoundException("Contacto no encontrado con ID: " + idContacto));
     }
 
     @Override
+    @Transactional
     public ContactoDTO buscarPorId(Long id) {
-        return null;
+        return contactoRepositorio.findById(id)
+                .map(contacto -> modelMapper.map(contacto, ContactoDTO.class))
+                .orElse(null);
     }
 
     @Override
+    @Transactional
     public List<ContactoDTO> listarTodos() {
-        return List.of();
+        List<Contacto> lista = contactoRepositorio.findAll();
+        return lista.stream()
+                .map(contacto -> modelMapper.map(contacto, ContactoDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional
     public List<ContactoDTO> listarContactosPorUsuario(Long idUsuario) {
-        return List.of();
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
+        List<Contacto> lista = contactoRepositorio.findByUsuarioId(idUsuario);
+
+        return lista.stream()
+                .map(contacto -> modelMapper.map(contacto, ContactoDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional
     public List<ContactoDTO> listarContactosPorEstado(String estado) {
-        return List.of();
+        List<Contacto> lista = contactoRepositorio.findByEstado(estado);
+        return lista.stream()
+                .map(contacto -> modelMapper.map(contacto, ContactoDTO.class))
+                .toList();
     }
 }

@@ -39,9 +39,15 @@ public class DepositoService implements IDepositoService{
             Usuario usuario = usuarioRepositorio.findById(depositoDTO.getIdUsuario())
                     .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + depositoDTO.getIdUsuario()));
 
-            Deposito deposito = modelMapper.map(depositoDTO, Deposito.class);
+            Deposito deposito = new Deposito();
             deposito.setIdusuario(usuario);
-
+            deposito.setUbicacion(depositoDTO.getUbicacion());
+            deposito.setFechaenvio(LocalDate.now());
+            deposito.setDescripcion(depositoDTO.getDescripcion());
+            deposito.setTiporesiduo(depositoDTO.getTiporesiduo());
+            deposito.setUbicaciondeposito(depositoDTO.getUbicaciondeposito());
+            deposito.setPruebas(depositoDTO.getPruebas());
+            deposito.setCantidad(depositoDTO.getCantidad());
             deposito.setEstado("Pendiente");
             deposito.setPuntosotorgados(0);
 
@@ -76,7 +82,7 @@ public class DepositoService implements IDepositoService{
     public DepositoDTO actualizarDeposito(Long id, DepositoDTO depositoDTO) {
         return depositoRepositorio.findById(id)
                 .map(depositoExistente -> {
-
+                    // Actualización campo por campo
                     if (depositoDTO.getUbicacion() != null) {
                         depositoExistente.setUbicacion(depositoDTO.getUbicacion());
                     }
@@ -96,27 +102,8 @@ public class DepositoService implements IDepositoService{
                         depositoExistente.setCantidad(depositoDTO.getCantidad());
                     }
 
-                    try {
-                        Deposito actualizado = depositoRepositorio.save(depositoExistente);
-
-                        DepositoDTO responseDTO = new DepositoDTO();
-                        responseDTO.setId(actualizado.getId());
-                        responseDTO.setIdUsuario(actualizado.getIdusuario().getId());
-                        responseDTO.setUbicacion(actualizado.getUbicacion());
-                        responseDTO.setFechaenvio(actualizado.getFechaenvio());
-                        responseDTO.setDescripcion(actualizado.getDescripcion());
-                        responseDTO.setTiporesiduo(actualizado.getTiporesiduo());
-                        responseDTO.setUbicaciondeposito(actualizado.getUbicaciondeposito());
-                        responseDTO.setPruebas(actualizado.getPruebas());
-                        responseDTO.setCantidad(actualizado.getCantidad());
-                        responseDTO.setPuntosotorgados(actualizado.getPuntosotorgados());
-                        responseDTO.setEstado(actualizado.getEstado());
-
-                        return responseDTO;
-
-                    } catch (Exception e) {
-                        throw new RuntimeException("Error al guardar: " + e.getMessage());
-                    }
+                    Deposito actualizado = depositoRepositorio.save(depositoExistente);
+                    return modelMapper.map(actualizado, DepositoDTO.class);
                 })
                 .orElseThrow(() -> new EntityNotFoundException("Depósito no encontrado con ID: " + id));
     }
@@ -126,11 +113,10 @@ public class DepositoService implements IDepositoService{
     @Override
     @Transactional
     public DepositoDTO validarDeposito(Long id, boolean aprobado) {
-        Deposito deposito = depositoRepositorio.findById(id).orElse(null);
-        if (deposito==null){
-            return null;
-        }
-        if (aprobado){
+        Deposito deposito = depositoRepositorio.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Depósito no encontrado con ID: " + id));
+
+        if (aprobado) {
             int puntos = calcularPuntos(deposito);
             deposito.setEstado("Aprobado");
             deposito.setPuntosotorgados(puntos);
@@ -144,17 +130,18 @@ public class DepositoService implements IDepositoService{
             historialdepunto.setFecha(LocalDate.now());
 
             historialPuntosRepository.save(historialdepunto);
-
-        }else {
+        } else {
             deposito.setEstado("Rechazado");
             deposito.setPuntosotorgados(0);
         }
+
         Deposito actualizado = depositoRepositorio.save(deposito);
-        return modelMapper.map(actualizado,DepositoDTO.class);
+        return modelMapper.map(actualizado, DepositoDTO.class);
     }
 
+
     private int calcularPuntos(Deposito deposito) {
-        return deposito.getCantidad().intValue() * 10;
-    }
+    return deposito.getCantidad().intValue() * 10;
+}
 }
 

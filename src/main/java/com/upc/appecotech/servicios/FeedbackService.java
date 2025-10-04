@@ -11,6 +11,8 @@ import com.upc.appecotech.repositorios.FeedbackRepositorio;
 import com.upc.appecotech.repositorios.UsuarioEventoRepositorio;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +23,6 @@ import java.util.List;
 public class FeedbackService implements IFeedbackService {
     @Autowired
     private FeedbackRepositorio feedbackRepositorio;
-
     @Autowired
     private UsuarioRepositorio usuarioRepositorio;
     @Autowired
@@ -29,7 +30,11 @@ public class FeedbackService implements IFeedbackService {
     @Autowired
     private UsuarioEventoRepositorio usuarioEventoRepositorio;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @Override
+    @Transactional
     public FeedbackDTO crearFeedback(FeedbackDTO feedbackDTO) {
         try {
             Usuario usuario = usuarioRepositorio.findById(feedbackDTO.getIdUsuario())
@@ -69,16 +74,7 @@ public class FeedbackService implements IFeedbackService {
 
             Feedback guardado = feedbackRepositorio.save(feedback);
 
-            // Mapeo manual para la respuesta
-            FeedbackDTO response = new FeedbackDTO();
-            response.setIdFeedback(guardado.getId());
-            response.setIdUsuario(guardado.getIdusuario().getId());
-            response.setIdEvento(guardado.getIdevento().getId());
-            response.setComentario(guardado.getComentario());
-            response.setPuntuacion(guardado.getPuntuacion());
-            response.setFecha(guardado.getFecha());
-
-            return response;
+            return modelMapper.map(guardado, FeedbackDTO.class);
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al crear feedback: " + e.getMessage());
@@ -86,6 +82,7 @@ public class FeedbackService implements IFeedbackService {
     }
 
     @Override
+    @Transactional
     public boolean validarAsistenciaEvento(Long idUsuario, Long idEvento) {
         List<Usuarioevento> inscripciones = usuarioEventoRepositorio.findByUsuarioIdAndEventoId(idUsuario, idEvento);
 
@@ -94,38 +91,32 @@ public class FeedbackService implements IFeedbackService {
     }
 
     @Override
+    @Transactional
     public FeedbackDTO actualizarFeedback(Long idFeedback, FeedbackDTO feedbackDTO) {
-        Feedback feedbackExistente = feedbackRepositorio.findById(idFeedback)
+        return feedbackRepositorio.findById(idFeedback)
+                .map(feedbackExistente -> {
+                    // Actualización campo por campo
+                    if (feedbackDTO.getPuntuacion() != null) {
+                        if (feedbackDTO.getPuntuacion() < 1 || feedbackDTO.getPuntuacion() > 5) {
+                            throw new RuntimeException("La puntuación debe estar entre 1 y 5");
+                        }
+                        feedbackExistente.setPuntuacion(feedbackDTO.getPuntuacion());
+                    }
+
+                    if (feedbackDTO.getComentario() != null && !feedbackDTO.getComentario().trim().isEmpty()) {
+                        feedbackExistente.setComentario(feedbackDTO.getComentario());
+                    }
+
+                    Feedback actualizado = feedbackRepositorio.save(feedbackExistente);
+                    return modelMapper.map(actualizado, FeedbackDTO.class);
+                })
                 .orElseThrow(() -> new EntityNotFoundException("Feedback no encontrado con ID: " + idFeedback));
-
-        // Validar puntuación si se actualiza
-        if (feedbackDTO.getPuntuacion() != null) {
-            if (feedbackDTO.getPuntuacion() < 1 || feedbackDTO.getPuntuacion() > 5) {
-                throw new RuntimeException("La puntuación debe estar entre 1 y 5");
-            }
-            feedbackExistente.setPuntuacion(feedbackDTO.getPuntuacion());
-        }
-
-        // Validar comentario si se actualiza
-        if (feedbackDTO.getComentario() != null && !feedbackDTO.getComentario().trim().isEmpty()) {
-            feedbackExistente.setComentario(feedbackDTO.getComentario());
-        }
-
-        Feedback actualizado = feedbackRepositorio.save(feedbackExistente);
-
-        // Mapeo manual para la respuesta
-        FeedbackDTO response = new FeedbackDTO();
-        response.setIdFeedback(actualizado.getId());
-        response.setIdUsuario(actualizado.getIdusuario().getId());
-        response.setIdEvento(actualizado.getIdevento().getId());
-        response.setComentario(actualizado.getComentario());
-        response.setPuntuacion(actualizado.getPuntuacion());
-        response.setFecha(actualizado.getFecha());
-
-        return response;
     }
 
+
+
     @Override
+    @Transactional
     public void eliminarFeedback(Long idFeedback) {
         if (!feedbackRepositorio.existsById(idFeedback)) {
             throw new EntityNotFoundException("Feedback no encontrado con ID: " + idFeedback);
@@ -134,27 +125,65 @@ public class FeedbackService implements IFeedbackService {
     }
 
     @Override
+    @Transactional
     public FeedbackDTO buscarPorId(Long id) {
-        return null;
+        return feedbackRepositorio.findById(id)
+                .map(feedback -> modelMapper.map(feedback, FeedbackDTO.class))
+                .orElse(null);
     }
 
     @Override
+    @Transactional
     public List<FeedbackDTO> listarTodos() {
-        return List.of();
+        List<Feedback> lista = feedbackRepositorio.findAll();
+        return lista.stream()
+                .map(feedback -> modelMapper.map(feedback, FeedbackDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional
     public List<FeedbackDTO> listarFeedbacksPorEvento(Long idEvento) {
-        return List.of();
+        eventoRepositorio.findById(idEvento)
+                .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + idEvento));
+
+        List<Feedback> lista = feedbackRepositorio.findByEventoId(idEvento);
+
+        return lista.stream()
+                .map(feedback -> modelMapper.map(feedback, FeedbackDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional
     public List<FeedbackDTO> listarFeedbacksPorUsuario(Long idUsuario) {
-        return List.of();
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
+        List<Feedback> lista = feedbackRepositorio.findByUsuarioId(idUsuario);
+
+        return lista.stream()
+                .map(feedback -> modelMapper.map(feedback, FeedbackDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional
     public Double calcularPromedioEvento(Long idEvento) {
-        return 0.0;
+        eventoRepositorio.findById(idEvento)
+                .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + idEvento));
+
+        List<Feedback> feedbacks = feedbackRepositorio.findByEventoId(idEvento);
+
+        if (feedbacks.isEmpty()) {
+            return 0.0;
+        }
+
+        double promedio = feedbacks.stream()
+                .mapToInt(Feedback::getPuntuacion)
+                .average()
+                .orElse(0.0);
+
+        return Math.round(promedio * 100.0) / 100.0;
     }
 }

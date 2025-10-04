@@ -30,13 +30,8 @@ public class UsuarioEventoService implements IUsuarioEventoService {
     private EventoRepositorio eventoRepositorio;
     @Autowired
     private HistorialPuntosRepository historialPuntosRepository;
-
     @Autowired
     private ModelMapper modelMapper;
-
-    // Lo hicimos de forma manual porque con ModelMapper tuvimos problemas
-    // en esta tabla con relaciones más complejas, a diferencia de otras
-    // entidades
 
 
     @Override
@@ -66,17 +61,7 @@ public class UsuarioEventoService implements IUsuarioEventoService {
             Usuarioevento guardado = usuarioEventoRepositorio.save(usuarioEvento);
 
 
-
-            // Mapeo manual para evitar errores de ModelMapper
-            UsuarioEventoDTO response = new UsuarioEventoDTO();
-            response.setId(guardado.getId());
-            response.setIdusuario(guardado.getIdusuario().getId());
-            response.setIdevento(guardado.getIdevento().getId());
-            response.setFechainscripcion(guardado.getFechainscripcion());
-            response.setAsistio(guardado.getAsistio());
-            response.setPuntosotorgados(guardado.getPuntosotorgados());
-
-            return response;
+            return modelMapper.map(guardado, UsuarioEventoDTO.class);
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al registrar inscripción: " + e.getMessage());
@@ -111,18 +96,12 @@ public class UsuarioEventoService implements IUsuarioEventoService {
 
         Usuarioevento actualizado = usuarioEventoRepositorio.save(usuarioevento);
 
-        UsuarioEventoDTO response = new UsuarioEventoDTO();
-        response.setId(actualizado.getId());
-        response.setIdusuario(actualizado.getIdusuario().getId());
-        response.setIdevento(actualizado.getIdevento().getId());
-        response.setFechainscripcion(actualizado.getFechainscripcion());
-        response.setAsistio(actualizado.getAsistio());
-        response.setPuntosotorgados(actualizado.getPuntosotorgados());
 
-        return response;
+        return modelMapper.map(actualizado, UsuarioEventoDTO.class);
     }
 
     @Override
+    @Transactional
     public List<UsuarioEventoDTO> listarInscritosPorEvento(Long idEvento) {
         eventoRepositorio.findById(idEvento)
                 .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + idEvento));
@@ -130,50 +109,24 @@ public class UsuarioEventoService implements IUsuarioEventoService {
         List<Usuarioevento> lista = usuarioEventoRepositorio.findByIdevento_Id(idEvento);
 
         return lista.stream()
-                .map(usuarioevento -> {
-                    // Si ModelMapper falla aquí, hacemos manual
-                    UsuarioEventoDTO usuarioEventoDTO = new UsuarioEventoDTO();
-                    usuarioEventoDTO.setId(usuarioevento.getId());
-                    usuarioEventoDTO.setIdusuario(usuarioevento.getIdusuario().getId());
-                    usuarioEventoDTO.setIdevento(usuarioevento.getIdevento().getId());
-                    usuarioEventoDTO.setFechainscripcion(usuarioevento.getFechainscripcion());
-                    usuarioEventoDTO.setAsistio(usuarioevento.getAsistio());
-                    usuarioEventoDTO.setPuntosotorgados(usuarioevento.getPuntosotorgados());
-                    return usuarioEventoDTO;
-                })
+                .map(usuarioevento -> modelMapper.map(usuarioevento, UsuarioEventoDTO.class))
                 .toList();
     }
 
     @Override
+    @Transactional
     public UsuarioEventoDTO buscarPorId(Long id) {
         return usuarioEventoRepositorio.findById(id)
-                .map(usuarioEvento -> {
-                    UsuarioEventoDTO usuarioEventoDTO = new UsuarioEventoDTO();
-                    usuarioEventoDTO.setId(usuarioEvento.getId());
-                    usuarioEventoDTO.setIdusuario(usuarioEvento.getIdusuario().getId());
-                    usuarioEventoDTO.setIdevento(usuarioEvento.getIdevento().getId());
-                    usuarioEventoDTO.setFechainscripcion(usuarioEvento.getFechainscripcion());
-                    usuarioEventoDTO.setAsistio(usuarioEvento.getAsistio());
-                    usuarioEventoDTO.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
-                    return usuarioEventoDTO;
-                })
+                .map(usuarioEvento -> modelMapper.map(usuarioEvento, UsuarioEventoDTO.class))
                 .orElse(null);
     }
 
     @Override
+    @Transactional
     public List<UsuarioEventoDTO> listarTodos() {
         List<Usuarioevento> lista = usuarioEventoRepositorio.findAll();
         return lista.stream()
-                .map(usuarioEvento -> {
-                    UsuarioEventoDTO usuarioEventoDTO = new UsuarioEventoDTO();
-                    usuarioEventoDTO.setId(usuarioEvento.getId());
-                    usuarioEventoDTO.setIdusuario(usuarioEvento.getIdusuario().getId());
-                    usuarioEventoDTO.setIdevento(usuarioEvento.getIdevento().getId());
-                    usuarioEventoDTO.setFechainscripcion(usuarioEvento.getFechainscripcion());
-                    usuarioEventoDTO.setAsistio(usuarioEvento.getAsistio());
-                    usuarioEventoDTO.setPuntosotorgados(usuarioEvento.getPuntosotorgados());
-                    return usuarioEventoDTO;
-                })
+                .map(usuarioEvento -> modelMapper.map(usuarioEvento, UsuarioEventoDTO.class))
                 .toList();
     }
 }

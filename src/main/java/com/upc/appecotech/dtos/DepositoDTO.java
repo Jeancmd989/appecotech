@@ -12,7 +12,7 @@ import java.time.LocalDate;
 
 public class DepositoDTO {
     private Long id;
-    private Long  idUsuario;
+    private Long idUsuario;
     private String ubicacion;
     private LocalDate fechaenvio;
     private String descripcion;
