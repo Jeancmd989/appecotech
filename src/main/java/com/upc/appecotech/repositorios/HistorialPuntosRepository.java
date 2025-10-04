@@ -18,4 +18,6 @@ public interface HistorialPuntosRepository extends JpaRepository<Historialdepunt
 
     @Query("SELECT h FROM Historialdepunto h WHERE h.idusuario.id = :idUsuario AND h.fecha BETWEEN :inicio AND :fin ORDER BY h.fecha DESC")
     List<Historialdepunto> findByUsuarioIdAndFechaBetween(@Param("idUsuario") Long idUsuario, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+    void deleteByIdusuario_Id(Long idusuario);
 }

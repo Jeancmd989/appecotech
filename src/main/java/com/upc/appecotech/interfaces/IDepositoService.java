@@ -1,14 +1,13 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.dto.DepositoDTO;
-import com.upc.appecotech.entidades.Deposito;
+import com.upc.appecotech.dtos.DepositoDTO;
 
 import java.util.List;
 
 public interface IDepositoService {
-    public DepositoDTO registrarDeposito(DepositoDTO depositoDTO);
-    public DepositoDTO buscarPorId(Long id);
-    public List<DepositoDTO> findAll();
-    public DepositoDTO actualizarDeposito(Long id, DepositoDTO depositoDTO);
-    public DepositoDTO validarDeposito(Long id, boolean aprobado);
+    DepositoDTO registrarDeposito(DepositoDTO depositoDTO);
+    DepositoDTO buscarPorId(Long id);
+    List<DepositoDTO> findAll();
+    DepositoDTO actualizarDeposito(Long id, DepositoDTO depositoDTO);
+    DepositoDTO validarDeposito(Long id, boolean aprobado);
 }

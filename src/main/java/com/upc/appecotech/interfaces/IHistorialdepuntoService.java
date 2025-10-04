@@ -1,7 +1,6 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.dto.HistorialPuntosDTO;
-import com.upc.appecotech.entidades.Historialdepunto;
+import com.upc.appecotech.dtos.HistorialPuntosDTO;
 
 import java.time.LocalDate;
 import java.util.List;

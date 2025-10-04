@@ -1,7 +1,6 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.dto.SuscripcionDTO;
-import com.upc.appecotech.entidades.Suscripcion;
+import com.upc.appecotech.dtos.SuscripcionDTO;
 
 import java.util.List;
 

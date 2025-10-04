@@ -1,7 +1,6 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.dto.UsuarioEventoDTO;
-import com.upc.appecotech.entidades.Usuarioevento;
+import com.upc.appecotech.dtos.UsuarioEventoDTO;
 
 import java.util.List;
 

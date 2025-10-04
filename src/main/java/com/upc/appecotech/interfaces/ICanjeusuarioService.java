@@ -1,7 +1,6 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.dto.CanjeUsuarioDTO;
-import com.upc.appecotech.entidades.Canjeusuario;
+import com.upc.appecotech.dtos.CanjeUsuarioDTO;
 
 import java.util.List;
 

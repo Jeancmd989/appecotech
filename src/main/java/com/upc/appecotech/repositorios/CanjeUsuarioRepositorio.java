@@ -12,4 +12,6 @@ import java.util.List;
 public interface CanjeUsuarioRepositorio extends JpaRepository<Canjeusuario, Long> {
     @Query("SELECT c FROM Canjeusuario c WHERE c.idusuario.id = :idUsuario")
     List<Canjeusuario> findByUsuarioId(@Param("idUsuario") Long idUsuario);
+
+    void deleteByIdusuario_Id(Long idusuario);
 }

@@ -17,4 +17,6 @@ public interface FeedbackRepositorio extends JpaRepository<Feedback, Long> {
 
     @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM Feedback f WHERE f.idusuario.id = :idUsuario AND f.idevento.id = :idEvento")
     boolean existsByUsuarioIdAndEventoId(@Param("idUsuario") Long idUsuario, @Param("idEvento") Long idEvento);
+
+    void deleteByIdusuario_Id(Long idusuario);
 }

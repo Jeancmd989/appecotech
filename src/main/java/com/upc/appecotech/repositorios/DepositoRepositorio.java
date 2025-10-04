@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 
 public interface DepositoRepositorio extends JpaRepository<Deposito, Long> {
+    void deleteByIdusuario_Id(Long idusuario);
+
 }

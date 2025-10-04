@@ -1,8 +1,6 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.dto.FeedbackDTO;
-import com.upc.appecotech.entidades.Canjeusuario;
-import com.upc.appecotech.entidades.Feedback;
+import com.upc.appecotech.dtos.FeedbackDTO;
 
 import java.util.List;
 
