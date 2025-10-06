@@ -51,7 +51,6 @@ public class UsuarioController {
         return ResponseEntity.notFound().build();
     }
 
-    // Eliminar usuario
     @DeleteMapping("/usuarios/{id}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
         try {

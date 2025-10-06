@@ -1,11 +1,13 @@
 package com.upc.appecotech.servicios;
 
 import com.upc.appecotech.dtos.CanjeUsuarioDTO;
+import com.upc.appecotech.dtos.SuscripcionDTO;
 import com.upc.appecotech.dtos.UsuarioEventoDTO;
 import com.upc.appecotech.entidades.Evento;
 import com.upc.appecotech.entidades.Historialdepunto;
 import com.upc.appecotech.entidades.Usuario;
 import com.upc.appecotech.entidades.Usuarioevento;
+import com.upc.appecotech.interfaces.ISuscripcionService;
 import com.upc.appecotech.interfaces.IUsuarioEventoService;
 import com.upc.appecotech.repositorios.EventoRepositorio;
 import com.upc.appecotech.repositorios.HistorialPuntosRepository;
@@ -33,6 +35,8 @@ public class UsuarioEventoService implements IUsuarioEventoService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private ISuscripcionService suscripcionService;
 
     @Override
     @Transactional
@@ -78,15 +82,26 @@ public class UsuarioEventoService implements IUsuarioEventoService {
         usuarioevento.setAsistio(asistio);
 
         if (asistio) {
-            int puntos = usuarioevento.getIdevento().getPuntos();
-            usuarioevento.setPuntosotorgados(puntos);
+            Integer multiplicador = suscripcionService.obtenerMultiplicadorPuntos(
+                    usuarioevento.getIdusuario().getId()
+            );
+
+            int puntosBase = usuarioevento.getIdevento().getPuntos();
+            int puntosConMultiplicador = puntosBase * multiplicador;
+
+            usuarioevento.setPuntosotorgados(puntosConMultiplicador);
 
             Historialdepunto historialdepunto = new Historialdepunto();
             historialdepunto.setIdusuario(usuarioevento.getIdusuario());
-            historialdepunto.setPuntosobtenidos(puntos);
+            historialdepunto.setPuntosobtenidos(puntosConMultiplicador);
             historialdepunto.setFecha(LocalDate.now());
             historialdepunto.setTipomovimiento("Evento");
-            historialdepunto.setDescripcion("Participación en evento: " + usuarioevento.getIdevento().getNombre());
+            historialdepunto.setDescripcion(
+                    String.format("Participación en evento: %s (x%d plan %s)",
+                            usuarioevento.getIdevento().getNombre(),
+                            multiplicador,
+                            obtenerNombrePlan(usuarioevento.getIdusuario().getId()))
+            );
             historialdepunto.setPuntoscanjeados(0);
 
             historialPuntosRepository.save(historialdepunto);
@@ -95,9 +110,13 @@ public class UsuarioEventoService implements IUsuarioEventoService {
         }
 
         Usuarioevento actualizado = usuarioEventoRepositorio.save(usuarioevento);
-
-
         return modelMapper.map(actualizado, UsuarioEventoDTO.class);
+    }
+
+
+    private String obtenerNombrePlan(Long idUsuario) {
+        SuscripcionDTO suscripcion = suscripcionService.obtenerSuscripcionActivaUsuario(idUsuario);
+        return suscripcion != null ? suscripcion.getTipoplan() : "Básico";
     }
 
     @Override

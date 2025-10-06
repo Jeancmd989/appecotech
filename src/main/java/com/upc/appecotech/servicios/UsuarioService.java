@@ -1,6 +1,8 @@
 package com.upc.appecotech.servicios;
 
 import com.upc.appecotech.dtos.UsuarioDTO;
+import com.upc.appecotech.entidades.Metodopago;
+import com.upc.appecotech.entidades.Suscripcion;
 import com.upc.appecotech.entidades.Usuario;
 import com.upc.appecotech.interfaces.IUsuarioService;
 import com.upc.appecotech.repositorios.*;
@@ -10,6 +12,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -26,8 +29,6 @@ public class UsuarioService implements IUsuarioService {
     @Autowired
     private DepositoRepositorio depositoRepositorio;
 
-    @Autowired
-    private SuscripcionRepositorio suscripcionRepositorio;
 
     @Autowired
     private FeedbackRepositorio feedbackRepositorio;
@@ -41,8 +42,14 @@ public class UsuarioService implements IUsuarioService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private MetodoPagoRepositorio metodoPagoRepositorio;
+
+    @Autowired
+    private SuscripcionRepositorio suscripcionRepositorio;
 
     @Override
+    @Transactional
     public UsuarioDTO registrarUsuario(UsuarioDTO usuarioDTO) {
         if (usuarioDTO.getId() != null) {
             throw new RuntimeException("No se debe proporcionar ID al crear un usuario");
@@ -53,12 +60,42 @@ public class UsuarioService implements IUsuarioService {
         Usuario usuario = modelMapper.map(usuarioDTO, Usuario.class);
         Usuario guardado = usuarioRepositorio.save(usuario);
 
+        crearSuscripcionBasicaGratuita(guardado.getId());
+
         return modelMapper.map(guardado, UsuarioDTO.class);
+    }
+
+    private void crearSuscripcionBasicaGratuita(Long idUsuario) {
+        try {
+            Metodopago metodoPagoGratuito = metodoPagoRepositorio.findByNombremetodo("Gratuito")
+                    .orElseGet(() -> {
+                        Metodopago nuevo = new Metodopago();
+                        nuevo.setNombremetodo("Gratuito");
+                        return metodoPagoRepositorio.save(nuevo);
+                    });
+
+            Usuario usuario = usuarioRepositorio.findById(idUsuario)
+                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+            Suscripcion suscripcionBasica = new Suscripcion();
+            suscripcionBasica.setIdusuario(usuario);
+            suscripcionBasica.setIdmetodopago(metodoPagoGratuito);
+            suscripcionBasica.setTipoplan("Basico");
+            suscripcionBasica.setFechainicio(LocalDate.now());
+            suscripcionBasica.setFechafin(LocalDate.now().plusYears(100)); // Permanente
+            suscripcionBasica.setDescripcion("Plan Básico Gratuito - Acceso estándar");
+            suscripcionBasica.setEstado("Activa");
+
+            suscripcionRepositorio.save(suscripcionBasica);
+        } catch (Exception e) {
+            System.err.println("Error al crear suscripción básica: " + e.getMessage());
+        }
     }
 
 
 
     @Override
+    @Transactional
     public UsuarioDTO actualizarUsuario(Long id, UsuarioDTO usuarioDTO) {
         return usuarioRepositorio.findById(id)
                 .map(usuarioExistente -> {
@@ -77,14 +114,17 @@ public class UsuarioService implements IUsuarioService {
 
 
     @Override
+    @Transactional
     public UsuarioDTO buscarPorId(Long id) {
-        return usuarioRepositorio.findById(id)
-                .map(usuario -> modelMapper.map(usuario, UsuarioDTO.class))
-                .orElse(null);
+        Usuario usuario = usuarioRepositorio.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario con ID " + id + " no encontrado"));
+
+        return modelMapper.map(usuario, UsuarioDTO.class);
     }
 
 
     @Override
+    @Transactional
     public List<UsuarioDTO> listarUsuarios() {
         List<Usuario> lista = usuarioRepositorio.findAll();
         return lista.stream()
@@ -110,5 +150,6 @@ public class UsuarioService implements IUsuarioService {
 
         usuarioRepositorio.deleteById(id);
     }
+
 
 }
