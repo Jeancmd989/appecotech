@@ -1,12 +1,15 @@
 package com.upc.appecotech.servicios;
 
 import com.upc.appecotech.dtos.DepositoDTO;
+import com.upc.appecotech.dtos.SuscripcionDTO;
 import com.upc.appecotech.entidades.Deposito;
 import com.upc.appecotech.entidades.Historialdepunto;
 import com.upc.appecotech.entidades.Usuario;
 import com.upc.appecotech.interfaces.IDepositoService;
+import com.upc.appecotech.interfaces.ISuscripcionService;
 import com.upc.appecotech.repositorios.DepositoRepositorio;
 import com.upc.appecotech.repositorios.HistorialPuntosRepository;
+import com.upc.appecotech.repositorios.SuscripcionRepositorio;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -29,6 +32,10 @@ public class DepositoService implements IDepositoService{
     private HistorialPuntosRepository historialPuntosRepository;
     @Autowired
     private UsuarioRepositorio usuarioRepositorio;
+    @Autowired
+    private SuscripcionRepositorio suscripcionRepositorio;
+    @Autowired
+    private ISuscripcionService suscripcionService;
 
 
 
@@ -109,6 +116,21 @@ public class DepositoService implements IDepositoService{
     }
 
 
+    @Override
+    @Transactional
+    public List<DepositoDTO> listarDepositosPorUsuario(Long idUsuario) {
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
+        List<Deposito> lista = depositoRepositorio.findByUsuarioId(idUsuario);
+
+        return lista.stream()
+                .map(deposito -> modelMapper.map(deposito, DepositoDTO.class))
+                .toList();
+    }
+
+
+
 
     @Override
     @Transactional
@@ -117,15 +139,26 @@ public class DepositoService implements IDepositoService{
                 .orElseThrow(() -> new EntityNotFoundException("Depósito no encontrado con ID: " + id));
 
         if (aprobado) {
-            int puntos = calcularPuntos(deposito);
+            Integer multiplicador = suscripcionService.obtenerMultiplicadorPuntos(
+                    deposito.getIdusuario().getId()
+            );
+
+            int puntosBase = calcularPuntos(deposito);
+            int puntosConMultiplicador = puntosBase * multiplicador;
+
             deposito.setEstado("Aprobado");
-            deposito.setPuntosotorgados(puntos);
+            deposito.setPuntosotorgados(puntosConMultiplicador);
 
             Historialdepunto historialdepunto = new Historialdepunto();
             historialdepunto.setIdusuario(deposito.getIdusuario());
-            historialdepunto.setPuntosobtenidos(puntos);
+            historialdepunto.setPuntosobtenidos(puntosConMultiplicador);
             historialdepunto.setTipomovimiento("Deposito");
-            historialdepunto.setDescripcion(deposito.getDescripcion());
+            historialdepunto.setDescripcion(
+                    String.format("%s (x%d plan %s)",
+                            deposito.getDescripcion(),
+                            multiplicador,
+                            obtenerNombrePlan(deposito.getIdusuario().getId()))
+            );
             historialdepunto.setPuntoscanjeados(0);
             historialdepunto.setFecha(LocalDate.now());
 
@@ -137,6 +170,11 @@ public class DepositoService implements IDepositoService{
 
         Deposito actualizado = depositoRepositorio.save(deposito);
         return modelMapper.map(actualizado, DepositoDTO.class);
+    }
+
+    private String obtenerNombrePlan(Long idUsuario) {
+        SuscripcionDTO suscripcion = suscripcionService.obtenerSuscripcionActivaUsuario(idUsuario);
+        return suscripcion != null ? suscripcion.getTipoplan() : "Básico";
     }
 
 

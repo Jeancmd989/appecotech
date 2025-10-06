@@ -12,12 +12,11 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class HistorialPuntosDTO {
+public class EventoDTO {
     private Long id;
-    private Long idusuario;
-    private Integer puntosobtenidos;
-    private String tipomovimiento;
-    private String descripcion;
-    private Integer puntoscanjeados;
+    private String nombre;
     private LocalDate fecha;
+    private String lugar;
+    private String descripcion;
+    private Integer puntos;
 }

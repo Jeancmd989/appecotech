@@ -43,28 +43,24 @@ public class FeedbackService implements IFeedbackService {
             Evento evento = eventoRepositorio.findById(feedbackDTO.getIdEvento())
                     .orElseThrow(() -> new EntityNotFoundException("Evento no encontrado con ID: " + feedbackDTO.getIdEvento()));
 
-            // Validar que el usuario asistió al evento
+
             if (!validarAsistenciaEvento(usuario.getId(), evento.getId())) {
                 throw new RuntimeException("El usuario no asistió a este evento");
             }
 
-            // Validar que no tenga feedback previo para este evento
             boolean yaExisteFeedback = feedbackRepositorio.existsByUsuarioIdAndEventoId(usuario.getId(), evento.getId());
             if (yaExisteFeedback) {
                 throw new RuntimeException("El usuario ya dejó feedback para este evento");
             }
 
-            // Validar puntuación
             if (feedbackDTO.getPuntuacion() < 1 || feedbackDTO.getPuntuacion() > 5) {
                 throw new RuntimeException("La puntuación debe estar entre 1 y 5");
             }
 
-            // Validar comentario no vacío
             if (feedbackDTO.getComentario() == null || feedbackDTO.getComentario().trim().isEmpty()) {
                 throw new RuntimeException("El comentario no puede estar vacío");
             }
 
-            // Crear feedback
             Feedback feedback = new Feedback();
             feedback.setIdusuario(usuario);
             feedback.setIdevento(evento);
