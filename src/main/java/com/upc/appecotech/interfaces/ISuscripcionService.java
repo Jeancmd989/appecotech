@@ -13,4 +13,5 @@ public interface ISuscripcionService {
     List<SuscripcionDTO> listarTodas();
     List<SuscripcionDTO> listarSuscripcionesPorUsuario(Long idUsuario);
     SuscripcionDTO obtenerSuscripcionActivaUsuario(Long idUsuario);
+    Integer obtenerMultiplicadorPuntos(Long idUsuario);
 }

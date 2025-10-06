@@ -10,4 +10,5 @@ public interface IDepositoService {
     List<DepositoDTO> findAll();
     DepositoDTO actualizarDeposito(Long id, DepositoDTO depositoDTO);
     DepositoDTO validarDeposito(Long id, boolean aprobado);
+    List<DepositoDTO> listarDepositosPorUsuario(Long idUsuario);
 }

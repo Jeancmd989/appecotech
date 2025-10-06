@@ -7,6 +7,8 @@ import com.upc.appecotech.interfaces.IHistorialdepuntoService;
 import com.upc.appecotech.repositorios.HistorialPuntosRepository;
 import com.upc.appecotech.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,35 +20,28 @@ public class HistorialPuntosService implements IHistorialdepuntoService {
     @Autowired
     private HistorialPuntosRepository historialPuntosRepository;
     @Autowired
+    private ModelMapper modelMapper;
+    @Autowired
     private UsuarioRepositorio usuarioRepositorio;
 
     @Override
+    @Transactional
     public HistorialPuntosDTO registrarMovimiento(HistorialPuntosDTO historialDTO) {
         try {
-            Usuario usuario = usuarioRepositorio.findById(historialDTO.getIdUsuario())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+            Usuario usuario = usuarioRepositorio.findById(historialDTO.getIdusuario())
+                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + historialDTO.getIdusuario()));
 
             Historialdepunto historial = new Historialdepunto();
             historial.setIdusuario(usuario);
-            historial.setPuntosobtenidos(historialDTO.getPuntosObtenidos());
-            historial.setPuntoscanjeados(historialDTO.getPuntosCanjeados());
-            historial.setTipomovimiento(historialDTO.getTipoMovimiento());
+            historial.setPuntosobtenidos(historialDTO.getPuntosobtenidos());
+            historial.setPuntoscanjeados(historialDTO.getPuntoscanjeados());
+            historial.setTipomovimiento(historialDTO.getTipomovimiento());
             historial.setDescripcion(historialDTO.getDescripcion());
             historial.setFecha(LocalDate.now());
 
             Historialdepunto guardado = historialPuntosRepository.save(historial);
 
-            // Mapeo manual
-            HistorialPuntosDTO response = new HistorialPuntosDTO();
-            response.setId(guardado.getId());
-            response.setIdUsuario(guardado.getIdusuario().getId());
-            response.setPuntosObtenidos(guardado.getPuntosobtenidos());
-            response.setPuntosCanjeados(guardado.getPuntoscanjeados());
-            response.setTipoMovimiento(guardado.getTipomovimiento());
-            response.setDescripcion(guardado.getDescripcion());
-            response.setFecha(guardado.getFecha());
-
-            return response;
+            return modelMapper.map(guardado, HistorialPuntosDTO.class);
 
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al registrar movimiento: " + e.getMessage());
@@ -54,48 +49,38 @@ public class HistorialPuntosService implements IHistorialdepuntoService {
     }
 
     @Override
+    @Transactional
     public List<HistorialPuntosDTO> obtenerHistorialUsuario(Long idUsuario) {
         usuarioRepositorio.findById(idUsuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
 
         List<Historialdepunto> historial = historialPuntosRepository.findByUsuarioId(idUsuario);
 
         return historial.stream()
-                .map(h -> {
-                    HistorialPuntosDTO dto = new HistorialPuntosDTO();
-                    dto.setId(h.getId());
-                    dto.setIdUsuario(h.getIdusuario().getId());
-                    dto.setPuntosObtenidos(h.getPuntosobtenidos());
-                    dto.setPuntosCanjeados(h.getPuntoscanjeados());
-                    dto.setTipoMovimiento(h.getTipomovimiento());
-                    dto.setDescripcion(h.getDescripcion());
-                    dto.setFecha(h.getFecha());
-                    return dto;
-                })
+                .map(h -> modelMapper.map(h, HistorialPuntosDTO.class))
                 .toList();
     }
 
     @Override
+    @Transactional
     public List<HistorialPuntosDTO> obtenerHistorialPorTipo(Long idUsuario, String tipoMovimiento) {
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
         List<Historialdepunto> historial = historialPuntosRepository.findByUsuarioIdAndTipo(idUsuario, tipoMovimiento);
 
         return historial.stream()
-                .map(h -> {
-                    HistorialPuntosDTO dto = new HistorialPuntosDTO();
-                    dto.setId(h.getId());
-                    dto.setIdUsuario(h.getIdusuario().getId());
-                    dto.setPuntosObtenidos(h.getPuntosobtenidos());
-                    dto.setPuntosCanjeados(h.getPuntoscanjeados());
-                    dto.setTipoMovimiento(h.getTipomovimiento());
-                    dto.setDescripcion(h.getDescripcion());
-                    dto.setFecha(h.getFecha());
-                    return dto;
-                })
+                .map(h -> modelMapper.map(h, HistorialPuntosDTO.class))
                 .toList();
+
     }
 
     @Override
+    @Transactional
     public Integer calcularPuntosDisponibles(Long idUsuario) {
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
         List<Historialdepunto> historial = historialPuntosRepository.findByUsuarioId(idUsuario);
 
         int puntosObtenidos = historial.stream()
@@ -110,21 +95,15 @@ public class HistorialPuntosService implements IHistorialdepuntoService {
     }
 
     @Override
+    @Transactional
     public List<HistorialPuntosDTO> obtenerHistorialPorFechas(Long idUsuario, LocalDate inicio, LocalDate fin) {
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+
         List<Historialdepunto> historial = historialPuntosRepository.findByUsuarioIdAndFechaBetween(idUsuario, inicio, fin);
 
         return historial.stream()
-                .map(h -> {
-                    HistorialPuntosDTO dto = new HistorialPuntosDTO();
-                    dto.setId(h.getId());
-                    dto.setIdUsuario(h.getIdusuario().getId());
-                    dto.setPuntosObtenidos(h.getPuntosobtenidos());
-                    dto.setPuntosCanjeados(h.getPuntoscanjeados());
-                    dto.setTipoMovimiento(h.getTipomovimiento());
-                    dto.setDescripcion(h.getDescripcion());
-                    dto.setFecha(h.getFecha());
-                    return dto;
-                })
+                .map(h -> modelMapper.map(h, HistorialPuntosDTO.class))
                 .toList();
     }
 }
