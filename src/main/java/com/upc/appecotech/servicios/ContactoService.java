@@ -31,7 +31,6 @@ public class ContactoService implements IContactoService {
             Usuario usuario = usuarioRepositorio.findById(contactoDTO.getIdUsuario())
                     .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + contactoDTO.getIdUsuario()));
 
-            // Validar descripción no vacía
             if (contactoDTO.getDescripcionProblema() == null || contactoDTO.getDescripcionProblema().trim().isEmpty()) {
                 throw new RuntimeException("La descripción del problema no puede estar vacía");
             }

@@ -47,12 +47,10 @@ public class CanjeusuarioService implements ICanjeusuarioService {
             Producto producto = productoRepositorio.findById(canjeUsuarioDTO.getIdProducto())
                     .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + canjeUsuarioDTO.getIdProducto()));
 
-            // Validar puntos suficientes
             if (!validarPuntosUsuario(usuario.getId(), producto.getId(), canjeUsuarioDTO.getCantidad())) {
                 throw new RuntimeException("Puntos insuficientes para realizar el canje");
             }
 
-            // Crear registro de canje
             Canjeusuario canjeUsuario = new Canjeusuario();
             canjeUsuario.setIdusuario(usuario);
             canjeUsuario.setIdproducto(producto);
@@ -61,10 +59,10 @@ public class CanjeusuarioService implements ICanjeusuarioService {
 
             Canjeusuario guardado = canjeUsuarioRepositorio.save(canjeUsuario);
 
-            // Calcular puntos a descontar
+
             int puntosADescontar = producto.getPuntosrequerido() * canjeUsuarioDTO.getCantidad();
 
-            // Registrar en historial de puntos
+
             Historialdepunto historial = new Historialdepunto();
             historial.setIdusuario(usuario);
             historial.setPuntosobtenidos(0);

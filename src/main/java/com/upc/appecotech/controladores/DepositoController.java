@@ -62,4 +62,14 @@ public class DepositoController {
         }
     }
 
+
+    @GetMapping("/usuarios/{idUsuario}/depositos")
+    public ResponseEntity<List<DepositoDTO>> listarDepositosPorUsuario(@PathVariable Long idUsuario) {
+        try {
+            return ResponseEntity.ok(depositoService.listarDepositosPorUsuario(idUsuario));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
