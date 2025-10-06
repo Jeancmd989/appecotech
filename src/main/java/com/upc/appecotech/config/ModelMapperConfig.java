@@ -57,7 +57,7 @@ public class ModelMapperConfig {
         // Si tu DTO tiene: private Long id;
         mapper.createTypeMap(Historialdepunto.class, HistorialPuntosDTO.class)
                 .addMapping(Historialdepunto::getId, HistorialPuntosDTO::setId)
-                .addMapping(src -> src.getIdusuario().getId(), HistorialPuntosDTO::setIdUsuario);
+                .addMapping(src -> src.getIdusuario().getId(), HistorialPuntosDTO::setIdusuario);
 
 
         return mapper;

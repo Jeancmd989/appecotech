@@ -34,14 +34,18 @@ public class SuscripcionService implements ISuscripcionService {
     public SuscripcionDTO crearSuscripcion(SuscripcionDTO suscripcionDTO) {
         try {
             Usuario usuario = usuarioRepositorio.findById(suscripcionDTO.getIdusuario())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + suscripcionDTO.getIdusuario()));
+                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
             Metodopago metodoPago = metodoPagoRepositorio.findById(suscripcionDTO.getIdmetodopago())
-                    .orElseThrow(() -> new EntityNotFoundException("Método de pago no encontrado con ID: " + suscripcionDTO.getIdmetodopago()));
+                    .orElseThrow(() -> new EntityNotFoundException("Método de pago no encontrado"));
 
-            // Validar que no tenga suscripción activa
-            if (validarSuscripcionActiva(usuario.getId())) {
-                throw new RuntimeException("El usuario ya tiene una suscripción activa");
+
+            List<Suscripcion> suscripcionesActivas = suscripcionRepositorio.findByUsuarioId(usuario.getId());
+            for (Suscripcion sus : suscripcionesActivas) {
+                if ("Activa".equals(sus.getEstado())) {
+                    sus.setEstado("Reemplazada");
+                    suscripcionRepositorio.save(sus);
+                }
             }
 
             Suscripcion suscripcion = new Suscripcion();
@@ -60,7 +64,6 @@ public class SuscripcionService implements ISuscripcionService {
         } catch (EntityNotFoundException e) {
             throw new RuntimeException("Error al crear suscripción: " + e.getMessage());
         }
-
     }
 
 
@@ -141,7 +144,23 @@ public class SuscripcionService implements ISuscripcionService {
                 .orElse(null);
     }
 
-    // Métodos helper
+    @Override
+    @Transactional
+    public Integer obtenerMultiplicadorPuntos(Long idUsuario) {
+        SuscripcionDTO suscripcionActiva = obtenerSuscripcionActivaUsuario(idUsuario);
+
+        if (suscripcionActiva == null) {
+            return 1;
+        }
+
+        return switch (suscripcionActiva.getTipoplan().toLowerCase()) {
+            case "basico" -> 1;
+            case "premium" -> 2;
+            case "vip" -> 3;
+            default -> 1;
+        };
+    }
+
     private LocalDate calcularFechaFin(String tipoPlan) {
         LocalDate ahora = LocalDate.now();
 
