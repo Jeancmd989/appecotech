@@ -6,6 +6,7 @@ import com.upc.appecotech.interfaces.IEventoService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +43,7 @@ public class EventoController {
 
 
     @GetMapping("/eventos")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<EventoDTO>> listarTodos() {
         return ResponseEntity.ok(eventoService.listarTodos());
     }
