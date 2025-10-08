@@ -1,4 +1,4 @@
-package com.upc.appecotech.entidades;
+package com.upc.appecotech.security.entidades;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

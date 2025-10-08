@@ -1,9 +1,12 @@
-package com.upc.appecotech.entidades;
+package com.upc.appecotech.security.entidades;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -38,5 +41,13 @@ public class Usuario {
     @NotNull
     @Column(name = "\"contraseña\"", nullable = false, length = Integer.MAX_VALUE)
     private String contraseña;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "usuariorol",
+            joinColumns = @JoinColumn(name = "idusuario"),
+            inverseJoinColumns = @JoinColumn(name = "idrol")
+    )
+    private Set<Rol> roles = new HashSet<>();
 
 }

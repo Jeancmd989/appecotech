@@ -1,18 +1,17 @@
 package com.upc.appecotech.servicios;
 
-import com.upc.appecotech.dtos.CanjeUsuarioDTO;
 import com.upc.appecotech.dtos.SuscripcionDTO;
 import com.upc.appecotech.dtos.UsuarioEventoDTO;
 import com.upc.appecotech.entidades.Evento;
 import com.upc.appecotech.entidades.Historialdepunto;
-import com.upc.appecotech.entidades.Usuario;
+import com.upc.appecotech.security.entidades.Usuario;
 import com.upc.appecotech.entidades.Usuarioevento;
 import com.upc.appecotech.interfaces.ISuscripcionService;
 import com.upc.appecotech.interfaces.IUsuarioEventoService;
 import com.upc.appecotech.repositorios.EventoRepositorio;
 import com.upc.appecotech.repositorios.HistorialPuntosRepository;
 import com.upc.appecotech.repositorios.UsuarioEventoRepositorio;
-import com.upc.appecotech.repositorios.UsuarioRepositorio;
+import com.upc.appecotech.security.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;

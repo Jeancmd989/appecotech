@@ -3,13 +3,17 @@ package com.upc.appecotech.servicios;
 import com.upc.appecotech.dtos.UsuarioDTO;
 import com.upc.appecotech.entidades.Metodopago;
 import com.upc.appecotech.entidades.Suscripcion;
-import com.upc.appecotech.entidades.Usuario;
+import com.upc.appecotech.security.entidades.Rol;
+import com.upc.appecotech.security.entidades.Usuario;
 import com.upc.appecotech.interfaces.IUsuarioService;
 import com.upc.appecotech.repositorios.*;
+import com.upc.appecotech.security.repositorios.RolRepositorio;
+import com.upc.appecotech.security.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -48,6 +52,13 @@ public class UsuarioService implements IUsuarioService {
     @Autowired
     private SuscripcionRepositorio suscripcionRepositorio;
 
+    @Autowired
+    private PasswordEncoder bcrypt;
+
+    @Autowired
+    private RolRepositorio rolRepositorio;
+
+
     @Override
     @Transactional
     public UsuarioDTO registrarUsuario(UsuarioDTO usuarioDTO) {
@@ -57,13 +68,27 @@ public class UsuarioService implements IUsuarioService {
         if (usuarioRepositorio.existsByEmail(usuarioDTO.getEmail())) {
             throw new RuntimeException("El email ya está registrado");
         }
+
+        // Mapear el DTO a entidad
         Usuario usuario = modelMapper.map(usuarioDTO, Usuario.class);
+
+        // 🔒 Encriptar la contraseña
+        usuario.setContraseña(bcrypt.encode(usuario.getContraseña()));
+
+        // 👤 Asignar el rol por defecto "USER"
+        Rol rolUser = rolRepositorio.findByNombrerol("USER")
+                .orElseThrow(() -> new RuntimeException("No se encontró el rol USER"));
+        usuario.getRoles().add(rolUser);
+
+        // 💾 Guardar el usuario con la contraseña encriptada y rol
         Usuario guardado = usuarioRepositorio.save(usuario);
 
+        // 🎁 Crear suscripción gratuita automáticamente
         crearSuscripcionBasicaGratuita(guardado.getId());
 
         return modelMapper.map(guardado, UsuarioDTO.class);
     }
+
 
     private void crearSuscripcionBasicaGratuita(Long idUsuario) {
         try {
@@ -150,6 +175,12 @@ public class UsuarioService implements IUsuarioService {
 
         usuarioRepositorio.deleteById(id);
     }
+
+
+
+
+
+
 
 
 }
