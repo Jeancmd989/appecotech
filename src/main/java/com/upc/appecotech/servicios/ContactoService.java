@@ -2,10 +2,10 @@ package com.upc.appecotech.servicios;
 
 import com.upc.appecotech.dtos.ContactoDTO;
 import com.upc.appecotech.entidades.Contacto;
-import com.upc.appecotech.entidades.Usuario;
+import com.upc.appecotech.security.entidades.Usuario;
 import com.upc.appecotech.interfaces.IContactoService;
 import com.upc.appecotech.repositorios.ContactoRepositorio;
-import com.upc.appecotech.repositorios.UsuarioRepositorio;
+import com.upc.appecotech.security.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
