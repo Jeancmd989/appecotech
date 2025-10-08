@@ -5,6 +5,7 @@ import com.upc.appecotech.interfaces.IDepositoService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,7 +53,10 @@ public class DepositoController {
         return ResponseEntity.notFound().build();
     }
 
+
+
     @PutMapping("/depositos/{id}/validar")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> validarDeposito(@PathVariable Long id, @RequestParam boolean aprobado){
         try {
             DepositoDTO validado = depositoService.validarDeposito(id, aprobado);
