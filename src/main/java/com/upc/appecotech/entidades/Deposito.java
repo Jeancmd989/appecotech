@@ -1,5 +1,6 @@
 package com.upc.appecotech.entidades;
 
+import com.upc.appecotech.security.entidades.Usuario;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
