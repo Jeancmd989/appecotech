@@ -2,10 +2,10 @@ package com.upc.appecotech.servicios;
 
 import com.upc.appecotech.dtos.HistorialPuntosDTO;
 import com.upc.appecotech.entidades.Historialdepunto;
-import com.upc.appecotech.entidades.Usuario;
+import com.upc.appecotech.security.entidades.Usuario;
 import com.upc.appecotech.interfaces.IHistorialdepuntoService;
 import com.upc.appecotech.repositorios.HistorialPuntosRepository;
-import com.upc.appecotech.repositorios.UsuarioRepositorio;
+import com.upc.appecotech.security.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;

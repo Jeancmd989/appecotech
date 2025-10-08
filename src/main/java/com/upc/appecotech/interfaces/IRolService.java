@@ -1,6 +1,6 @@
 package com.upc.appecotech.interfaces;
 
-import com.upc.appecotech.entidades.Rol;
+import com.upc.appecotech.security.entidades.Rol;
 
 import java.util.List;
 
