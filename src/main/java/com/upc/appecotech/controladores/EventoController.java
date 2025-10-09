@@ -48,6 +48,7 @@ public class EventoController {
         return ResponseEntity.ok(eventoService.listarTodos());
     }
 
+
     @GetMapping("/eventos/proximos")
     public ResponseEntity<List<EventoDTO>> listarEventosProximos() {
         return ResponseEntity.ok(eventoService.listarEventosProximos());

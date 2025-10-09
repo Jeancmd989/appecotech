@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,7 +17,9 @@ public class ProductoController {
     @Autowired
     private IProductoService productoService;
 
+
     @PostMapping("/productos")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> crearProducto(@RequestBody ProductoDTO productoDTO) {
         try {
             ProductoDTO nuevoProducto = productoService.crearProducto(productoDTO);
@@ -27,6 +30,7 @@ public class ProductoController {
     }
 
     @PutMapping("/productos/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> actualizarProducto(@PathVariable Long id, @RequestBody ProductoDTO productoDTO) {
         try {
             ProductoDTO actualizado = productoService.actualizarProducto(id, productoDTO);
@@ -72,6 +76,7 @@ public class ProductoController {
 
 
     @DeleteMapping("/productos/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> eliminarProducto(@PathVariable Long id) {
         try {
             productoService.eliminarProducto(id);
