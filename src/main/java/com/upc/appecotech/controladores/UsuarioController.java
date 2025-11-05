@@ -5,12 +5,16 @@ import com.upc.appecotech.interfaces.IUsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+
 public class UsuarioController {
     @Autowired
     private IUsuarioService usuarioService;
@@ -58,6 +62,34 @@ public class UsuarioController {
             return ResponseEntity.ok("Usuario eliminado correctamente");
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @GetMapping("/usuarios/email/{email}")
+    public ResponseEntity<UsuarioDTO> buscarPorEmail(@PathVariable String email) {
+        try {
+            UsuarioDTO usuario = usuarioService.buscarPorEmail(email);
+            if (usuario != null) {
+                return ResponseEntity.ok(usuario);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PutMapping("/usuarios/{id}/cambiar-contrasena")
+    public ResponseEntity<?> cambiarContrasena(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> datos
+    ) {
+        try {
+            String contrasenaActual = datos.get("contrasenaActual");
+            String contrasenaNueva = datos.get("contrasenaNueva");
+
+            usuarioService.cambiarContrasena(id, contrasenaActual, contrasenaNueva);
+            return ResponseEntity.ok("Contraseña actualizada correctamente");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -39,8 +39,8 @@ public class Usuario {
     private String direccion;
 
     @NotNull
-    @Column(name = "\"contraseña\"", nullable = false, length = Integer.MAX_VALUE)
-    private String contraseña;
+    @Column(name = "contrasena", nullable = false, length = Integer.MAX_VALUE)
+    private String contrasena;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
