@@ -22,7 +22,7 @@ public class AdminUserController {
 
     @PostMapping("/usuario")
     public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
-        usuario.setContraseña(bcrypt.encode(usuario.getContraseña()));
+        usuario.setContrasena(bcrypt.encode(usuario.getContrasena()));
         usuarioAdminService.registrarUsuario(usuario);
         return ResponseEntity.ok("Usuario registrado correctamente");
     }

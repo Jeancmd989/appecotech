@@ -5,6 +5,7 @@ import java.util.Set;
 public class AuthResponseDTO {
     private String jwt;
     private Set<String> roles;
+    private Long idusuario;
 
     public String getJwt() {
         return jwt;
@@ -21,4 +22,7 @@ public class AuthResponseDTO {
     public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
+
+    public Long getIdusuario() { return idusuario; }
+    public void setIdusuario(Long idusuario) { this.idusuario = idusuario; }
 }

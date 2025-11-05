@@ -2,7 +2,7 @@ package com.upc.appecotech.security.dtos;
 
 public class AuthRequestDTO {
     private String email;
-    private String contraseña;
+    private String contrasena;
 
     public String getEmail() {
         return email;
@@ -12,11 +12,11 @@ public class AuthRequestDTO {
         this.email = email;
     }
 
-    public String getContraseña() {
-        return contraseña;
+    public String getContrasena() {
+        return contrasena;
     }
 
-    public void setContraseña(String contraseña) {
-        this.contraseña = contraseña;
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
     }
 }
