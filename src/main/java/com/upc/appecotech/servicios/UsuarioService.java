@@ -69,21 +69,17 @@ public class UsuarioService implements IUsuarioService {
             throw new RuntimeException("El email ya está registrado");
         }
 
-        // Mapear el DTO a entidad
         Usuario usuario = modelMapper.map(usuarioDTO, Usuario.class);
 
-        // 🔒 Encriptar la contraseña
-        usuario.setContraseña(bcrypt.encode(usuario.getContraseña()));
+        usuario.setContrasena(bcrypt.encode(usuario.getContrasena()));
 
-        // 👤 Asignar el rol por defecto "USER"
         Rol rolUser = rolRepositorio.findByNombrerol("USER")
                 .orElseThrow(() -> new RuntimeException("No se encontró el rol USER"));
         usuario.getRoles().add(rolUser);
 
-        // 💾 Guardar el usuario con la contraseña encriptada y rol
+
         Usuario guardado = usuarioRepositorio.save(usuario);
 
-        // 🎁 Crear suscripción gratuita automáticamente
         crearSuscripcionBasicaGratuita(guardado.getId());
 
         return modelMapper.map(guardado, UsuarioDTO.class);
@@ -129,7 +125,7 @@ public class UsuarioService implements IUsuarioService {
                     usuarioExistente.setEmail(usuarioDTO.getEmail());
                     usuarioExistente.setTelefono(usuarioDTO.getTelefono());
                     usuarioExistente.setDireccion(usuarioDTO.getDireccion());
-                    usuarioExistente.setContraseña(usuarioDTO.getContraseña());
+                    usuarioExistente.setContrasena(usuarioDTO.getContrasena());
 
                     Usuario actualizado = usuarioRepositorio.save(usuarioExistente);
                     return modelMapper.map(actualizado, UsuarioDTO.class);
@@ -176,11 +172,27 @@ public class UsuarioService implements IUsuarioService {
         usuarioRepositorio.deleteById(id);
     }
 
+    @Override
+    public UsuarioDTO buscarPorEmail(String email) {
+        Usuario usuario = usuarioRepositorio.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        return modelMapper.map(usuario, UsuarioDTO.class);
+    }
 
+    @Override
+    public void cambiarContrasena(Long id, String contrasenaActual, String contrasenaNueva) {
+        Usuario usuario = usuarioRepositorio.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
+        // Verificar que la contraseña actual sea correcta
+        if (!bcrypt.matches(contrasenaActual, usuario.getContrasena())) {
+            throw new RuntimeException("Contraseña actual incorrecta");
+        }
 
-
-
+        // Actualizar con la nueva contraseña
+        usuario.setContrasena(bcrypt.encode(contrasenaNueva));
+        usuarioRepositorio.save(usuario);
+    }
 
 
 }

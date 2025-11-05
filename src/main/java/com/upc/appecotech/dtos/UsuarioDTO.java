@@ -17,5 +17,5 @@ public class UsuarioDTO {
     private String email;
     private String telefono;
     private String direccion;
-    private String contraseña;
+    private String contrasena;
 }

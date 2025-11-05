@@ -5,6 +5,7 @@ import com.upc.appecotech.interfaces.IUsuarioEventoService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +27,9 @@ public class UsuarioeventoController {
         }
     }
 
+
     @PutMapping("/usuario-eventos/{idUsuarioEvento}/asistencia")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> marcarAsistencia(@PathVariable Long idUsuarioEvento, @RequestParam boolean asistio) {
         try {
             UsuarioEventoDTO actualizado = usuarioEventoService.marcarAsistencia(idUsuarioEvento, asistio);
