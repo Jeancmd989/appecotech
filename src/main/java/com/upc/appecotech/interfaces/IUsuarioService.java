@@ -11,4 +11,6 @@ public interface IUsuarioService {
     UsuarioDTO buscarPorId(Long id);
     List<UsuarioDTO> listarUsuarios();
     void eliminarUsuario(Long id);
+    UsuarioDTO buscarPorEmail(String email);
+    void cambiarContrasena(Long id, String contrasenaActual, String contrasenaNueva);
 }

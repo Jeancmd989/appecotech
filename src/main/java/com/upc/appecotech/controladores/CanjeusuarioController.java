@@ -16,6 +16,7 @@ public class CanjeusuarioController {
     @Autowired
     private ICanjeusuarioService canjeusuarioService;
 
+
     @PostMapping("/canjes")
     public ResponseEntity<?> canjearProducto(@RequestBody CanjeUsuarioDTO canjeUsuarioDTO) {
         try {
@@ -27,7 +28,6 @@ public class CanjeusuarioController {
     }
 
     @GetMapping("/usuarios/{idUsuario}/validar-puntos")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Boolean> validarPuntosUsuario(
             @PathVariable Long idUsuario,
             @RequestParam Long idProducto,

@@ -18,7 +18,6 @@ public class EventoController {
     private IEventoService eventoService;
 
 
-
     @PostMapping("/eventos")
     public ResponseEntity<?> crearEvento(@RequestBody EventoDTO eventoDTO) {
         try {
@@ -43,7 +42,6 @@ public class EventoController {
 
 
     @GetMapping("/eventos")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<EventoDTO>> listarTodos() {
         return ResponseEntity.ok(eventoService.listarTodos());
     }
