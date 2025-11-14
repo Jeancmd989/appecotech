@@ -61,5 +61,14 @@ public class UsuarioeventoController {
             return ResponseEntity.notFound().build();
         }
     }
+    @GetMapping("/usuarios/{idUsuario}/eventos")
+    public ResponseEntity<List<UsuarioEventoDTO>> listarEventosPorUsuario(@PathVariable Long idUsuario) {
+        try {
+            return ResponseEntity.ok(usuarioEventoService.listarEventosPorUsuario(idUsuario));
+        }catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
 }

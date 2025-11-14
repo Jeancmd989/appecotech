@@ -17,8 +17,8 @@ public class ModelMapperConfig {
         mapper.createTypeMap(Usuarioevento.class, UsuarioEventoDTO.class)
                 .addMapping(Usuarioevento::getId, UsuarioEventoDTO::setId)
                 .addMapping(src -> src.getIdusuario().getId(), UsuarioEventoDTO::setIdusuario)
-                .addMapping(src -> src.getIdevento().getId(), UsuarioEventoDTO::setIdevento);
-
+                .addMapping(src -> src.getIdevento().getId(), UsuarioEventoDTO::setIdevento)
+                .addMapping(Usuarioevento::getIdevento, UsuarioEventoDTO::setEvento);
         // ========== CANJEUSUARIO ==========
         mapper.createTypeMap(Canjeusuario.class, CanjeUsuarioDTO.class)
                 .addMapping(Canjeusuario::getId, CanjeUsuarioDTO::setId)

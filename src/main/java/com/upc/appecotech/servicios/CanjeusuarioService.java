@@ -11,6 +11,7 @@ import com.upc.appecotech.repositorios.HistorialPuntosRepository;
 import com.upc.appecotech.repositorios.ProductoRepositorio;
 import com.upc.appecotech.security.repositorios.UsuarioRepositorio;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.Table;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,5 +128,19 @@ public class CanjeusuarioService implements ICanjeusuarioService {
         return lista.stream()
                 .map(canjeUsuario -> modelMapper.map(canjeUsuario, CanjeUsuarioDTO.class))
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public int obtenerPuntosDisponibles(Long idUsuario) {
+        Usuario usuario = usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+        List<Historialdepunto> historial = historialPuntosRepository.findByUsuarioId(idUsuario);
+
+        int puntosObtenidos = historial.stream().mapToInt(Historialdepunto::getPuntosobtenidos).sum();
+        int puntosCanjeados = historial.stream().mapToInt(Historialdepunto::getPuntoscanjeados).sum();
+
+        return puntosObtenidos - puntosCanjeados;
     }
 }

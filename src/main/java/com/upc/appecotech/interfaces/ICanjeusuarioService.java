@@ -10,4 +10,6 @@ public interface ICanjeusuarioService {
     CanjeUsuarioDTO buscarPorId(Long id);
     List<CanjeUsuarioDTO> listarTodos();
     List<CanjeUsuarioDTO> listarCanjesPorUsuario(Long idUsuario);
+    int obtenerPuntosDisponibles(Long idUsuario);
+
 }

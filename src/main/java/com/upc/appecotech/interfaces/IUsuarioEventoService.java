@@ -10,4 +10,5 @@ public interface IUsuarioEventoService {
     List<UsuarioEventoDTO> listarInscritosPorEvento(Long idEvento);
     UsuarioEventoDTO buscarPorId(Long id);
     List<UsuarioEventoDTO> listarTodos();
+    List<UsuarioEventoDTO> listarEventosPorUsuario(Long idUsuario);
 }

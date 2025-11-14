@@ -22,4 +22,5 @@ public class UsuarioEventoDTO {
     private LocalDate fechainscripcion;
     private Boolean asistio = false;
     private Integer puntosotorgados;
+    private EventoDTO evento;
 }

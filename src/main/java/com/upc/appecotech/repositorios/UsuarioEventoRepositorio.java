@@ -18,6 +18,9 @@ public interface UsuarioEventoRepositorio extends JpaRepository<Usuarioevento, L
     @Query("SELECT ue FROM Usuarioevento ue WHERE ue.idusuario.id = :idUsuario AND ue.idevento.id = :idEvento")
     List<Usuarioevento> findByUsuarioIdAndEventoId(@Param("idUsuario") Long idUsuario, @Param("idEvento") Long idEvento);
 
+    List<Usuarioevento> findByIdusuario_Id(Long idUsuario);
+
+
     void deleteByIdusuario_Id(Long idusuario);
     List<Evento> existsByIdevento_Id(Long idevento_Id);
 }

@@ -63,4 +63,15 @@ public class CanjeusuarioController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/usuarios/{idUsuario}/puntos")
+    public ResponseEntity<Integer> obtenerPuntosDisponibles(@PathVariable Long idUsuario) {
+        try {
+            int puntosDisponibles = canjeusuarioService.obtenerPuntosDisponibles(idUsuario);
+            return ResponseEntity.ok(puntosDisponibles);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

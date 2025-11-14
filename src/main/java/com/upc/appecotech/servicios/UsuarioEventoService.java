@@ -147,4 +147,14 @@ public class UsuarioEventoService implements IUsuarioEventoService {
                 .map(usuarioEvento -> modelMapper.map(usuarioEvento, UsuarioEventoDTO.class))
                 .toList();
     }
+
+    @Override
+    public List<UsuarioEventoDTO> listarEventosPorUsuario(Long idUsuario) {
+        usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+        List<Usuarioevento> lista = usuarioEventoRepositorio.findByIdusuario_Id(idUsuario);
+        return lista.stream()
+                .map(usuarioevento -> modelMapper.map(usuarioevento,UsuarioEventoDTO.class))
+                .toList();
+    }
 }
